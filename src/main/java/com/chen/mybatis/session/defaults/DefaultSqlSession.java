@@ -1,16 +1,16 @@
-package com.chen.mybatis.session;
+package com.chen.mybatis.session.defaults;
 
 import com.chen.mybatis.binding.MapperRegistry;
+import com.chen.mybatis.session.Configuration;
+import com.chen.mybatis.session.SqlSession;
 
 public class DefaultSqlSession implements SqlSession {
 
-    /**
-     * 映射器注册机
-     */
-    private MapperRegistry mapperRegistry;
+    private Configuration configuration;
 
-    public DefaultSqlSession(MapperRegistry mapperRegistry) {
-        this.mapperRegistry = mapperRegistry;
+
+    public DefaultSqlSession(Configuration configuration) {
+        this.configuration = configuration;
     }
 
     @Override
@@ -25,6 +25,11 @@ public class DefaultSqlSession implements SqlSession {
 
     @Override
     public <T> T getMapper(Class<T> type) {
-        return mapperRegistry.getMapper(type,this);
+        return configuration.getMapper(type,this);
+    }
+
+
+    public Configuration getConfiguration(){
+        return configuration;
     }
 }

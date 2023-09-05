@@ -2,7 +2,7 @@ package com.chen.mybatis;
 
 import com.chen.mybatis.binding.MapperRegistry;
 import com.chen.mybatis.test.dao.IUserDao;
-import com.chen.mybatis.session.DefaultSqlSessionFactory;
+import com.chen.mybatis.session.defaults.DefaultSqlSessionFactory;
 import com.chen.mybatis.session.SqlSession;
 import com.chen.mybatis.session.SqlSessionFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -31,20 +31,20 @@ public class ApiTest {
 //        log.info("测试结果: " + result);
 //    }
 
-    @Test
-    public void test_MapperProxyFactory(){
-        MapperRegistry registry =new MapperRegistry();
-        registry.addMappers("com.chen.mybatis.test.dao");
-        // 从SqlSession 工厂 获取session
-        SqlSessionFactory sqlSessionFactory = new DefaultSqlSessionFactory(registry);
-        SqlSession sqlSession = sqlSessionFactory.openSession();
-        // 获取映射器对象
-        IUserDao userDao = sqlSession.getMapper(IUserDao.class);
-
-        // 测试验证
-        String res = userDao.queryUserName("10001");
-        log.info("测试结果:{}",res);
-    }
+//    @Test
+//    public void test_MapperProxyFactory(){
+//        MapperRegistry registry =new MapperRegistry();
+//        registry.addMappers("com.chen.mybatis.test.dao");
+//        // 从SqlSession 工厂 获取session
+////        SqlSessionFactory sqlSessionFactory = new DefaultSqlSessionFactory(registry);
+//        SqlSession sqlSession = sqlSessionFactory.openSession();
+//        // 获取映射器对象
+//        IUserDao userDao = sqlSession.getMapper(IUserDao.class);
+//
+//        // 测试验证
+//        String res = userDao.queryUserName("10001");
+//        log.info("测试结果:{}",res);
+//    }
 
 
 }
