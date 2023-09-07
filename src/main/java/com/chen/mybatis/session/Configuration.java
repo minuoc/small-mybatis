@@ -1,7 +1,10 @@
 package com.chen.mybatis.session;
 
 import com.chen.mybatis.binding.MapperRegistry;
+import com.chen.mybatis.datasource.DruidDataSourceFactory;
 import com.chen.mybatis.mapping.MappedStatement;
+import com.chen.mybatis.transaction.jdc.JdbcTransactionFactory;
+import com.chen.mybatis.type.TypeAliasRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +22,16 @@ public class Configuration {
      * 映射的语句,存在Map里
      */
     protected final Map<String, MappedStatement> mappedStatements = new HashMap<>();
+
+    /**
+     * 类型别名注册机
+     */
+    protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
+
+    public Configuration() {
+        typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
+        typeAliasRegistry.registerAlias("DRUID", DruidDataSourceFactory.class);
+    }
 
     public void addMappers(String packageName) {
         mapperRegistry.addMappers(packageName);
