@@ -2,6 +2,7 @@ package com.chen.mybatis.session;
 
 import com.chen.mybatis.binding.MapperRegistry;
 import com.chen.mybatis.datasource.DruidDataSourceFactory;
+import com.chen.mybatis.mapping.Environment;
 import com.chen.mybatis.mapping.MappedStatement;
 import com.chen.mybatis.transaction.jdc.JdbcTransactionFactory;
 import com.chen.mybatis.type.TypeAliasRegistry;
@@ -11,6 +12,10 @@ import java.util.Map;
 
 public class Configuration {
 
+    /**
+     * 环境
+     */
+    protected Environment environment;
 
     /**
      * 映射注册机
@@ -55,5 +60,18 @@ public class Configuration {
 
     public MappedStatement getMappedStatement(String id) {
         return mappedStatements.get(id);
+    }
+
+
+    public TypeAliasRegistry getTypeAliasRegistry(){
+        return typeAliasRegistry;
+    }
+
+    public Environment getEnvironment() {
+        return environment;
+    }
+
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
     }
 }
