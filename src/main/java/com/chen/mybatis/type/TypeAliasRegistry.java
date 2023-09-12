@@ -23,6 +23,7 @@ public class TypeAliasRegistry {
     public void registerAlias(String alias, Class<?> value) {
         String key = alias.toLowerCase(Locale.ENGLISH);
         TYPE_ALIASES.put(key,value);
+        System.out.println("ssss");
     }
 
 
