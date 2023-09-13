@@ -2,6 +2,7 @@ package com.chen.mybatis.builder;
 
 import com.chen.mybatis.datasource.DataSourceFactory;
 import com.chen.mybatis.io.Resources;
+import com.chen.mybatis.mapping.BoundSql;
 import com.chen.mybatis.mapping.Environment;
 import com.chen.mybatis.mapping.MappedStatement;
 import com.chen.mybatis.mapping.SqlCommandType;
@@ -119,8 +120,11 @@ public class XmlConfigBuilder extends BaseBuilder{
                 String msId = namespace + "." + id;
                 String nodeName = node.getName();
                 SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
-                MappedStatement mappedStatement = new MappedStatement.Builder(configuration,msId,sqlCommandType,
-                        parameterType,resultType,sql,parameter).build();
+
+                BoundSql boundSql = new BoundSql(sql,parameter,parameterType,resultType);
+
+                MappedStatement mappedStatement = new MappedStatement.Builder(configuration,msId,sqlCommandType
+                        ,boundSql).build();
 
                 // 添加解析 SQL
                 configuration.addMappedStatement(mappedStatement);
