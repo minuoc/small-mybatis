@@ -1,8 +1,11 @@
 package com.chen.mybatis.session.defaults;
 
-import com.chen.mybatis.binding.MapperRegistry;
+import com.chen.mybatis.mapping.Environment;
+import com.chen.mybatis.mapping.MappedStatement;
 import com.chen.mybatis.session.Configuration;
 import com.chen.mybatis.session.SqlSession;
+
+import java.sql.Connection;
 
 public class DefaultSqlSession implements SqlSession {
 
@@ -15,7 +18,20 @@ public class DefaultSqlSession implements SqlSession {
 
     @Override
     public <T> T selectOne(String statement) {
-       return (T) ("你被代理了！" + statement );
+        try {
+            MappedStatement mappedStatement = configuration.getMappedStatement(statement);
+            Environment environment = configuration.getEnvironment();
+
+            Connection connection = environment.getDataSource().getConnection();
+
+
+
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
     }
 
     @Override
@@ -25,11 +41,12 @@ public class DefaultSqlSession implements SqlSession {
 
     @Override
     public <T> T getMapper(Class<T> type) {
-        return configuration.getMapper(type,this);
+        return configuration.getMapper(type, this);
     }
 
 
-    public Configuration getConfiguration(){
+    @Override
+    public Configuration getConfiguration() {
         return configuration;
     }
 }

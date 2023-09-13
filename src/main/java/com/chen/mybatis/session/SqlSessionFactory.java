@@ -7,4 +7,7 @@ public interface SqlSessionFactory {
      * @return
      */
     SqlSession openSession();
+
+
+
 }
