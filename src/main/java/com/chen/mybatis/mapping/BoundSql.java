@@ -23,5 +23,4 @@ public class BoundSql {
         this.resultType = resultType;
     }
 
-
 }
