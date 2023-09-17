@@ -25,6 +25,7 @@ public class PoolState {
      */
     protected long requestCount = 0;
 
+
     protected long accumulatedRequestTime = 0;
 
     protected long accumulatedCheckoutTime = 0;

@@ -61,7 +61,7 @@ public class PooledDataSource implements DataSource {
     }
 
 
-    protected void puhConnection(PooledConnection connection) {
+    protected void puhConnection(PooledConnection connection) throws SQLException {
 
         synchronized (state) {
             state.activeConnections.remove(connection);
@@ -71,12 +71,107 @@ public class PooledDataSource implements DataSource {
                 if (state.idleConnections.size() < poolMaximumIdleConnections
                 && connection.getConnectionTypeCode() == expectedConnectionTypeCode) {
                     state.accumulatedCheckoutTime += connection.getCheckoutTime();
-                    if (!connection.getRealConnection())
+                    if (!connection.getRealConnection().getAutoCommit()) {
+                        connection.getRealConnection().rollback();
+                    }
+                    //实例化一个新的DB 连接，加入到idle 列表
+                    PooledConnection newConnection = new PooledConnection(connection.getRealConnection(), this);
+                    state.idleConnections.add(newConnection);
+                    newConnection.setCreatedTimestamp(connection.getCreatedTimestamp());
+                    newConnection.setLastUsedTimestamp(connection.getLastUsedTimestamp());
+                    logger.info("Returned connection " + newConnection.getRealConnection() + " to pool.");
+
+                    state.notifyAll();
+
+                } else {
+                    state.accumulatedCheckoutTime += connection.getCheckoutTime();
+                    if (!connection.getRealConnection().getAutoCommit()) {
+                        connection.getRealConnection().rollback();
+                    }
+                    // 将connection 关闭
+                    connection.getRealConnection().close();
+                    logger.info("Closed connection " + connection.getRealHashCode() + ".");
+                    connection.invalidate();
+
                 }
+            } else {
+                logger.info("A bad connection (" + connection.getRealConnection() + ") attempted to return to the pool, discarding connection.");
+                state.badConnectionCount ++;
             }
 
         }
 
+    }
+
+
+    private PooledConnection popConnection(String username, String password) throws SQLException {
+        boolean countedWait = false;
+        PooledConnection conn = null;
+        long t = System.currentTimeMillis();
+        int localBadConnectionCount = 0;
+        while (conn == null ){
+            synchronized (state) {
+                //如果有空闲连接：返回第一个
+                if (!state.idleConnections.isEmpty()) {
+                    conn = state.idleConnections.remove(0);
+                    logger.info("Checked out connection " + conn.getRealConnection() + " from pool.");
+                }
+                // 如果无空闲连接：创建新的连接
+                else {
+                    // 活跃 连接数不足
+                    if (state.activeConnections.size() < poolMaximumActiveConnections) {
+                        conn = new PooledConnection(dataSource.getConnection(), this);
+                        logger.info("Created connection " + conn.getRealHashCode() + ".");
+                    } else {
+                        //活跃连接数 已满, 获取活跃连接列表的第一个 也就是最老的一个连接
+                        PooledConnection oldestActiveConnection = state.activeConnections.get(0);
+                        long longestCheckoutTime = oldestActiveConnection.getCheckoutTime();
+                        // 如果checkout时间过长, 则这个连接标记为过期
+                        if (longestCheckoutTime > poolMaximumCheckoutTime) {
+                            state.claimedOverdueConnectionCount ++;
+                            state.accumulatedCheckoutTimeOfOverdueConnections += longestCheckoutTime;
+                            state.accumulatedCheckoutTime += longestCheckoutTime;
+                            state.activeConnections.remove(oldestActiveConnection);
+                            if (!oldestActiveConnection.getRealConnection().getAutoCommit()) {
+                                oldestActiveConnection.getRealConnection().rollback();
+                            }
+                            //删除掉最老的连接 然后重新实例化一个新的连接
+                            conn = new PooledConnection(oldestActiveConnection.getRealConnection(),this);
+                            oldestActiveConnection.invalidate();
+                            logger.info("Claimed overdue connection " + conn.getRealHashCode() + ".");
+                        } else {
+                            // 如果checkout超时时间不够长,则等待
+                            try {
+                                if (!countedWait) {
+                                    state.hadToWaitCount ++;
+                                    countedWait = true;
+                                }
+                                logger.info("Waiting as long as " + poolTimeToWait + " milliseconds for connection.");
+                                long wt = System.currentTimeMillis();
+                                state.wait(poolTimeToWait);
+                                state.accumulatedCheckoutTime += System.currentTimeMillis() - wt;
+                            } catch (InterruptedException e) {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+        if (conn == null) {
+            logger.debug("PooledDataSource: Unknown severe error condition. The connection pool return a null connection.");
+            throw new SQLException("PooledDataSource: Unknown severe error condition. The connection pool return a null connection.");
+        }
+
+        return conn;
+    }
+
+
+    public void forceCloseAll(){
+        synchronized (state) {
+
+        }
     }
 
     @Override
@@ -122,5 +217,10 @@ public class PooledDataSource implements DataSource {
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         return false;
+    }
+
+    public boolean pingConnection(PooledConnection connection) {
+
+        return true;
     }
 }
