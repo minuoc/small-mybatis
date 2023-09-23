@@ -1,18 +1,21 @@
 package com.chen.mybatis.datasource.pooled;
 
 import com.chen.mybatis.datasource.unpooled.UnpooledDataSource;
+import lombok.Data;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
+import java.sql.*;
 import java.util.logging.Logger;
 
 /**
  * 有连接池的数据源
  */
+
+@Data
 public class PooledDataSource implements DataSource {
 
 
@@ -170,48 +173,117 @@ public class PooledDataSource implements DataSource {
 
     public void forceCloseAll(){
         synchronized (state) {
+            expectedConnectionTypeCode = assembleConnectionTypeCode(dataSource.getUrl(), dataSource.getUsername(),dataSource.getPassword());
+            // 关闭活跃连接
+            for (int i = state.activeConnections.size(); i > 0; i--) {
+                try {
+                    PooledConnection conn = state.activeConnections.remove(i - 1);
+                    conn.invalidate();
+
+                    Connection realConn = conn.getRealConnection();
+                    if (! realConn.getAutoCommit()) {
+                        realConn.rollback();
+                    }
+                    realConn.close();
+                } catch (Exception ignore) {
+
+                }
+            }
+
+            // 关闭空闲连接
+            for (int i = state.idleConnections.size(); i > 0; i--) {
+                try {
+                    PooledConnection conn = state.idleConnections.remove(i -1);
+                    conn.invalidate();
+
+                    Connection realConn = conn.getRealConnection();
+                    if (!realConn.getAutoCommit()) {
+                        realConn.rollback();
+                    }
+                }catch (Exception ignore) {
+
+                }
+            }
+
+            logger.info("PooledDataSource forcefully close/removed all connections.");
 
         }
     }
 
+    protected boolean pingConnection(PooledConnection conn) {
+        boolean result = true;
+        try {
+            result = !conn.getRealConnection().isClosed();
+        }catch (SQLException e) {
+            logger.info("Connection " + conn.getRealConnection() + " is BAD: " + e.getMessage());
+            result = false;
+        }
+        if (result) {
+            if (poolPingEnabled) {
+                if (poolPingConnectionNotUsedFor >= 0 && conn.getTimeElapsedSinceLastUse() > poolPingConnectionNotUsedFor) {
+                    try {
+                        logger.info("Testing connection " + conn.getRealConnection() + " ...");
+                        Connection realConn = conn.getRealConnection();
+                        Statement statement = realConn.createStatement();
+                        ResultSet resultSet = statement.executeQuery(poolPingQuery);
+                        resultSet.close();
+                        if (!realConn.getAutoCommit()) {
+                            realConn.rollback();
+                        }
+                        result = true;
+                        logger.info("Connection " + conn.getRealConnection() + " is GOOD!");
+                    } catch (Exception e) {
+                        logger.info("Execution of ping query '" + poolPingQuery + "' failed:" + e.getMessage());
+                        try {
+                            conn.getRealConnection().close();
+                        } catch (SQLException ignore) {
+
+                        }
+                        result = false;
+                        logger.info("Connection " + conn.getRealConnection() + " is BAD:" + e.getMessage());
+                    }
+                }
+            }
+        }
+        return result;
+
+    }
+
+
+    public static Connection unwrapConnection(Connection conn) {
+        if (Proxy.isProxyClass(conn.getClass())) {
+            InvocationHandler handler = Proxy.getInvocationHandler(conn);
+            if (handler instanceof PooledConnection) {
+                return ((PooledConnection) handler).getRealConnection();
+            }
+        }
+        return conn;
+    }
+
+    private int assembleConnectionTypeCode(String url, String username, String password) {
+        return ("" + url + username + password).hashCode();
+    }
+
     @Override
     public Connection getConnection() throws SQLException {
-        return null;
+        return popConnection(dataSource.getUsername(), dataSource.getPassword()).getProxyConnection();
     }
 
     @Override
     public Connection getConnection(String username, String password) throws SQLException {
-        return null;
+        return popConnection(username,password).getProxyConnection();
     }
 
-    @Override
-    public PrintWriter getLogWriter() throws SQLException {
-        return null;
+
+    protected void finalize() throws Throwable {
+        forceCloseAll();
+        super.finalize();
     }
 
-    @Override
-    public void setLogWriter(PrintWriter out) throws SQLException {
-
-    }
-
-    @Override
-    public void setLoginTimeout(int seconds) throws SQLException {
-
-    }
-
-    @Override
-    public int getLoginTimeout() throws SQLException {
-        return 0;
-    }
-
-    @Override
-    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-        return null;
-    }
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        return null;
+        throw new SQLException(getClass().getName() + " is not a wrapper.");
     }
 
     @Override
@@ -219,8 +291,34 @@ public class PooledDataSource implements DataSource {
         return false;
     }
 
-    public boolean pingConnection(PooledConnection connection) {
+    @Override
+    public PrintWriter getLogWriter() throws SQLException {
 
-        return true;
+        return DriverManager.getLogWriter();
     }
+
+    @Override
+    public void setLogWriter(PrintWriter out) throws SQLException {
+        DriverManager.setLogWriter(out);
+    }
+
+    @Override
+    public void setLoginTimeout(int seconds) throws SQLException {
+        DriverManager.setLoginTimeout(seconds);
+    }
+
+    @Override
+    public int getLoginTimeout() throws SQLException {
+        return DriverManager.getLoginTimeout();
+    }
+
+    @Override
+    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+        return Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+    }
+
+
+
+
+
 }
