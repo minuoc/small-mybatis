@@ -8,17 +8,17 @@ import java.util.List;
  */
 public class PoolState {
 
-    protected  PooledDataSource dataSource;
+    protected PooledDataSource dataSource;
 
     /**
      * 空闲连接
      */
-    protected  final List<PooledConnection> idleConnections = new ArrayList<>();
+    protected final List<PooledConnection> idleConnections = new ArrayList<>();
 
     /**
      * 活跃连接
      */
-    protected  final List<PooledConnection> activeConnections = new ArrayList<>();
+    protected final List<PooledConnection> activeConnections = new ArrayList<>();
 
     /**
      * 请求次数
@@ -37,7 +37,7 @@ public class PoolState {
     /**
      * 总等待时间
      */
-    protected  long accumulatedWaitTime = 0;
+    protected long accumulatedWaitTime = 0;
 
     /**
      * 要等待的次数
