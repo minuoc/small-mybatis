@@ -2,6 +2,7 @@ package com.chen.mybatis.datasource.pooled;
 
 import com.chen.mybatis.datasource.unpooled.UnpooledDataSource;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
@@ -15,6 +16,7 @@ import java.util.logging.Logger;
  * 有连接池的数据源
  */
 
+@Slf4j
 @Data
 public class PooledDataSource implements DataSource {
 
@@ -186,7 +188,7 @@ public class PooledDataSource implements DataSource {
                     }
                     realConn.close();
                 } catch (Exception ignore) {
-
+                    logger.error(ignore.getMessage());
                 }
             }
 
