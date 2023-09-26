@@ -2,6 +2,7 @@ package com.chen.mybatis.session;
 
 import com.chen.mybatis.builder.XmlConfigBuilder;
 import com.chen.mybatis.session.defaults.DefaultSqlSession;
+import com.chen.mybatis.session.defaults.DefaultSqlSessionFactory;
 
 import java.io.Reader;
 
@@ -10,12 +11,12 @@ import java.io.Reader;
  */
 public class SqlSessionFactoryBuilder {
 
-    public SqlSession build(Reader reader){
+    public SqlSessionFactory build(Reader reader){
         XmlConfigBuilder xmlConfigBuilder = new XmlConfigBuilder(reader);
         return build(xmlConfigBuilder.parse());
     }
 
-    public SqlSession build(Configuration config){
-        return new DefaultSqlSession(config);
+    public SqlSessionFactory build(Configuration config){
+        return new DefaultSqlSessionFactory(config);
     }
 }

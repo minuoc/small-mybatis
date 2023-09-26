@@ -1,16 +1,23 @@
 package com.chen.mybatis;
 
-import com.chen.mybatis.binding.MapperRegistry;
-import com.chen.mybatis.test.dao.IUserDao;
-import com.chen.mybatis.session.defaults.DefaultSqlSessionFactory;
+import com.alibaba.fastjson.JSON;
+import com.chen.mybatis.io.Resources;
 import com.chen.mybatis.session.SqlSession;
 import com.chen.mybatis.session.SqlSessionFactory;
+import com.chen.mybatis.session.SqlSessionFactoryBuilder;
+import com.chen.mybatis.test.dao.IUserDao;
+import com.chen.mybatis.test.po.User;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 @Slf4j
 public class ApiTest {
 
+    private Logger logger = LoggerFactory.getLogger(ApiTest.class);
 //    @Test
 //    public void test_MapperProxyFactory() {
 //        MapperProxyFactory<IUserDao> factory = new MapperProxyFactory<>(IUserDao.class);
@@ -46,5 +53,19 @@ public class ApiTest {
 //        log.info("测试结果:{}",res);
 //    }
 
+    @Test
+    public void test_SqlSessionFactory() throws IOException {
+        //
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(Resources.getResourceAsReader("mybatis-config-datasource.xml"));
 
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+
+        IUserDao userDao = sqlSession.getMapper(IUserDao.class);
+
+        for (int i = 0; i < 50; i++) {
+            User user = userDao.queryUserInfoById(1L);
+            logger.info("测试结果:{}" + JSON.toJSONString(user));
+        }
+
+    }
 }

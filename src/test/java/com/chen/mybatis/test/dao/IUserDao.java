@@ -1,9 +1,10 @@
 package com.chen.mybatis.test.dao;
 
+import com.chen.mybatis.test.po.User;
+
 public interface IUserDao {
 
-    String queryUserName(String uId);
 
-    Integer queryUserAge(String uId);
 
+    User queryUserInfoById(long l);
 }
