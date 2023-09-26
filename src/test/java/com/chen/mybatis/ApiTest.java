@@ -64,7 +64,7 @@ public class ApiTest {
 
         for (int i = 0; i < 50; i++) {
             User user = userDao.queryUserInfoById(1L);
-            logger.info("测试结果:{}" + JSON.toJSONString(user));
+            logger.info("测试结果:{}" ,JSON.toJSONString(user));
         }
 
     }
