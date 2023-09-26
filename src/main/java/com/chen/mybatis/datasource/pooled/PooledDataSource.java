@@ -187,6 +187,9 @@ public class PooledDataSource implements DataSource {
                     realConn.close();
                 } catch (Exception ignore) {
 
+
+
+
                 }
             }
 
