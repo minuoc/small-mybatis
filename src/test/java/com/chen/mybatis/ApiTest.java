@@ -1,16 +1,12 @@
 package com.chen.mybatis;
 
 import com.chen.mybatis.binding.MapperRegistry;
-import com.chen.mybatis.io.Resources;
-import com.chen.mybatis.session.SqlSessionFactoryBuilder;
 import com.chen.mybatis.test.dao.IUserDao;
 import com.chen.mybatis.session.defaults.DefaultSqlSessionFactory;
 import com.chen.mybatis.session.SqlSession;
 import com.chen.mybatis.session.SqlSessionFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
-
-import java.io.IOException;
 
 @Slf4j
 public class ApiTest {
@@ -50,21 +46,5 @@ public class ApiTest {
 //        log.info("测试结果:{}",res);
 //    }
 
-
-    @Test
-    public void test_SqlSessionFactory() throws IOException {
-        // 1. 从SqlSessionFactory中获取SqlSession
-        SqlSessionFactory sqlSessionFactory = (SqlSessionFactory) new SqlSessionFactoryBuilder().build(Resources.getResourceAsReader("mybatis-config-datasource.xml"));
-        SqlSession sqlSession = sqlSessionFactory.openSession();
-
-        // 2. 获取映射器对象
-        IUserDao userDao = sqlSession.getMapper(IUserDao.class);
-
-        // 3. 测试验证
-        for (int i = 0; i < 50; i++) {
-//            User user = userDao.queryUserInfoById(1L);
-//            logger.info("测试结果：{}", JSON.toJSONString(user));
-        }
-    }
 
 }
