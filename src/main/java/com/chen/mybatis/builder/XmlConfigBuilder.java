@@ -18,6 +18,7 @@ import org.xml.sax.InputSource;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,28 +50,24 @@ public class XmlConfigBuilder extends BaseBuilder{
         return configuration;
     }
 
-    private void environmentsElement(Element context) throws InstantiationException, IllegalAccessException {
+    private void environmentsElement(Element context) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         String environment = context.attributeValue("default");
         List<Element> environmentList = context.elements("environment");
         for (Element e : environmentList) {
             String id = e.attributeValue("id");
             if (environment.equals(id)){
-                //事务管理器
-                TransactionFactory txFactory = (TransactionFactory) typeAliasRegistry.resolveAlias(
-                        e.element("transactionManager").attributeValue("type")).newInstance();
+                // 事务管理器
+                TransactionFactory txFactory = (TransactionFactory) typeAliasRegistry.resolveAlias(e.element("transactionManager").attributeValue("type")).newInstance();
+
                 // 数据源
                 Element dataSourceElement = e.element("dataSource");
-                DataSourceFactory dataSourceFactory = (DataSourceFactory) typeAliasRegistry.resolveAlias(dataSourceElement.attributeValue("type"))
-                        .newInstance();
-
+                DataSourceFactory dataSourceFactory = (DataSourceFactory) typeAliasRegistry.resolveAlias(dataSourceElement.attributeValue("type")).newInstance();
                 List<Element> propertyList = dataSourceElement.elements("property");
                 Properties props = new Properties();
                 for (Element property : propertyList) {
-                    props.setProperty(property.attributeValue("name"),property.attributeValue("value"));
+                    props.setProperty(property.attributeValue("name"), property.attributeValue("value"));
                 }
-
                 dataSourceFactory.setProperties(props);
-
                 DataSource dataSource = dataSourceFactory.getDataSource();
 
                 // 构建环境
