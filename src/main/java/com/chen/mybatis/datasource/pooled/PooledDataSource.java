@@ -15,15 +15,16 @@ import java.util.logging.Logger;
 /**
  * 有连接池的数据源
  */
-
-@Slf4j
 @Data
+@Slf4j
 public class PooledDataSource implements DataSource {
 
 
     private org.slf4j.Logger logger = LoggerFactory.getLogger(PooledDataSource.class);
 
+    // 池状态
     private final PoolState state = new PoolState(this);
+
 
     private final UnpooledDataSource dataSource;
 
@@ -61,12 +62,12 @@ public class PooledDataSource implements DataSource {
 
     private int expectedConnectionTypeCode;
 
-    public PooledDataSource(UnpooledDataSource dataSource) {
-        this.dataSource = dataSource;
+    public PooledDataSource(){
+        this.dataSource = new UnpooledDataSource();
     }
 
 
-    protected void puhConnection(PooledConnection connection) throws SQLException {
+    protected void pushConnection(PooledConnection connection) throws SQLException {
 
         synchronized (state) {
             state.activeConnections.remove(connection);
@@ -189,10 +190,6 @@ public class PooledDataSource implements DataSource {
                     realConn.close();
                 } catch (Exception ignore) {
                     logger.error(ignore.getMessage());
-
-
-
-
                 }
             }
 
@@ -324,7 +321,25 @@ public class PooledDataSource implements DataSource {
     }
 
 
+    public void setDriver(String driver) {
+        dataSource.setDriver(driver);
+        forceCloseAll();
+    }
 
+    public void setUrl(String url) {
+        dataSource.setUrl(url);
+        forceCloseAll();
+    }
+
+    public void setUsername(String username) {
+        dataSource.setUsername(username);
+        forceCloseAll();
+    }
+
+    public void setPassword(String password) {
+        dataSource.setPassword(password);
+        forceCloseAll();
+    }
 
 
 }

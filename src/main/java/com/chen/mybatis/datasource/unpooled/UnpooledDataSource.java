@@ -48,6 +48,9 @@ public class UnpooledDataSource implements DataSource {
 
     private Boolean autoCommit;
 
+    /**
+     * 事务级别
+     */
     private Integer defaultTransactionIsolationLevel;
 
     static {

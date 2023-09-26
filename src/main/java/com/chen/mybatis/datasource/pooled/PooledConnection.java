@@ -46,12 +46,18 @@ public class PooledConnection implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
         String methodName = method.getName();
-        // 如果是调用CLOSE 关闭连接方法，则将链接键入连接池中，并返回null
+        // 如果是调用 CLOSE 关闭链接方法，则将链接加入连接池中，并返回null
         if (CLOSE.hashCode() == methodName.hashCode() && CLOSE.equals(methodName)) {
-//            dataSource.pushConnection(this);
+            dataSource.pushConnection(this);
+            return null;
+        } else {
+            if (!Object.class.equals(method.getDeclaringClass())) {
+                // 除了toString()方法，其他方法调用之前要检查connection是否还是合法的,不合法要抛出SQLException
+                checkConnection();
+            }
+            // 其他方法交给connection去调用
+            return method.invoke(realConnection, args);
         }
-
-        return null;
     }
 
     private void checkConnection() throws SQLException {

@@ -2,6 +2,8 @@ package com.chen.mybatis.session;
 
 import com.chen.mybatis.binding.MapperRegistry;
 import com.chen.mybatis.datasource.DruidDataSourceFactory;
+import com.chen.mybatis.datasource.pooled.PooledDataSourceFactory;
+import com.chen.mybatis.datasource.unpooled.UnpooledDataSourceFactory;
 import com.chen.mybatis.mapping.Environment;
 import com.chen.mybatis.mapping.MappedStatement;
 import com.chen.mybatis.transaction.jdc.JdbcTransactionFactory;
@@ -36,18 +38,20 @@ public class Configuration {
     public Configuration() {
         typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
         typeAliasRegistry.registerAlias("DRUID", DruidDataSourceFactory.class);
+        typeAliasRegistry.registerAlias("UNPOOLED", UnpooledDataSourceFactory.class);
+        typeAliasRegistry.registerAlias("POOLED", PooledDataSourceFactory.class);
     }
 
     public void addMappers(String packageName) {
         mapperRegistry.addMappers(packageName);
     }
 
-    public <T> void addMapper(Class<T> type){
+    public <T> void addMapper(Class<T> type) {
         mapperRegistry.addMapper(type);
     }
 
     public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
-        return mapperRegistry.getMapper(type,sqlSession);
+        return mapperRegistry.getMapper(type, sqlSession);
     }
 
     public boolean hasMapper(Class<?> type) {
@@ -63,7 +67,7 @@ public class Configuration {
     }
 
 
-    public TypeAliasRegistry getTypeAliasRegistry(){
+    public TypeAliasRegistry getTypeAliasRegistry() {
         return typeAliasRegistry;
     }
 
