@@ -20,8 +20,8 @@ import java.util.List;
  */
 public class PrepareStatementHandler extends BaseStatementHandler {
 
-    protected PrepareStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, ResultSetHandler resultSetHandler, BoundSql boundSql) {
-        super(executor, mappedStatement, parameterObject, resultSetHandler, boundSql);
+    public PrepareStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, ResultHandler resultHandler, BoundSql boundSql) {
+        super(executor, mappedStatement, parameterObject, resultHandler, boundSql);
     }
 
     @Override

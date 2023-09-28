@@ -29,7 +29,7 @@ public abstract class BaseStatementHandler implements StatementHandler{
 
     protected BoundSql boundSql;
 
-    protected BaseStatementHandler( Executor executor, MappedStatement mappedStatement, Object parameterObject, ResultSetHandler resultSetHandler,BoundSql boundSql) {
+    protected BaseStatementHandler( Executor executor, MappedStatement mappedStatement, Object parameterObject, ResultHandler resultHandler,BoundSql boundSql) {
         this.configuration = mappedStatement.getConfiguration();
         this.executor = executor;
         this.mappedStatement = mappedStatement;
@@ -37,7 +37,7 @@ public abstract class BaseStatementHandler implements StatementHandler{
 
         // 参数和 结果集
         this.parameterObject = parameterObject;
-        this.resultSetHandler = resultSetHandler;
+        this.resultSetHandler = configuration.newResultSetHandler(executor,mappedStatement,boundSql);
     }
 
     @Override

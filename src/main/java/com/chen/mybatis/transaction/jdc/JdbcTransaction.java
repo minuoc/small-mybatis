@@ -23,7 +23,7 @@ public class JdbcTransaction implements Transaction {
 
     public JdbcTransaction( DataSource dataSource, TransactionIsolationLevel level,boolean autoCommit) {
         this.dataSource = dataSource;
-        this.dataSource = dataSource;
+        this.level = level;
         this.autoCommit = autoCommit;
     }
 
