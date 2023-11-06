@@ -1,17 +1,14 @@
 package com.chen.mybatis.reflection;
 
 import com.chen.mybatis.reflection.invoker.Invoker;
+import com.chen.mybatis.reflection.invoker.MethodInvoker;
+import com.chen.mybatis.reflection.property.PropertyNamer;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ReflectPermission;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-
 
 
 public class Reflector {
@@ -20,33 +17,67 @@ public class Reflector {
 
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-    private static final Map<Class<?>,Reflector> REFLECTOR_MAP = new ConcurrentHashMap<>();
+    /**
+     * 线程安全的缓存
+     */
+    private static final Map<Class<?>, Reflector> REFLECTOR_MAP = new ConcurrentHashMap<>();
 
     private Class<?> type;
-
+    /**
+     * get 属性列表
+     */
     private String[] readablePropertyNames = EMPTY_STRING_ARRAY;
 
+    /**
+     * set 属性列表
+     */
     private String[] writeablePropertyNames = EMPTY_STRING_ARRAY;
 
+    /**
+     * set 方法列表
+     */
     private Map<String, Invoker> setMethods = new HashMap<>();
 
-    private Map<String,Invoker> getSetMethods = new HashMap<>();
+    /**
+     * get 方法列表
+     */
+    private Map<String, Invoker> getMethods = new HashMap<>();
 
+    /**
+     * set 类型列表
+     */
+    private Map<String,Class<?>> setTypes = new HashMap<>();
+
+    /**
+     * get 类型列表
+     */
+    private Map<String,Class<?>> getTypes = new HashMap<>();
+
+    /**
+     * 构造函数
+     */
     private Constructor<?> defaultConstructor;
 
-    private Map<String,String> caseInsensitivePropertyMap = new HashMap<>();
+    private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
 
     public Reflector(Class<?> clazz) {
         this.type = clazz;
-        
+
         // 加入构造函数
         addDefaultConstructor(clazz);
+        //加入getter
+        addGetMethods(clazz);
+        // 加入setter
+        addSetMethods(clazz);
+        // 加入字段
+        addFields(clazz);
     }
+
 
     private void addDefaultConstructor(Class<?> clazz) {
         Constructor<?>[] consts = clazz.getDeclaredConstructors();
         for (Constructor<?> constructor : consts) {
-            if (constructor.getParameterTypes().length == 0){
+            if (constructor.getParameterTypes().length == 0) {
                 if (canAccessPrivateMethods()) {
                     try {
                         constructor.setAccessible(true);
@@ -60,25 +91,128 @@ public class Reflector {
             }
         }
 
-        
+
     }
 
-    private void addGetMethods(Class<?> clazz){
+    private void addGetMethods(Class<?> clazz) {
         Map<String, List<Method>> conflictingGetters = new HashMap<>();
         Method[] methods = getClassMethods(clazz);
+        for (Method method : methods) {
+            String name = method.getName();
+            if (name.startsWith("get") && name.length() > 3) {
+                if (method.getParameterTypes().length == 0) {
+                    name = PropertyNamer.methodToProperty(name);
+                    addMethodConflict(conflictingGetters, name, method);
+                }
+            } else if (name.startsWith("is") && name.length() > 2) {
+                if (method.getParameterTypes().length == 0) {
+                    name = PropertyNamer.methodToProperty(name);
+                    addMethodConflict(conflictingGetters, name, method);
+                }
+            }
+        }
+        resolveGetterConflicts(conflictingGetters);
+    }
+
+    private void addSetMethods(Class<?> clazz) {
+        Map<String,List<Method>> conflictingSetters = new HashMap<>();
+        Method[] methods = getClassMethods(clazz);
+        for (Method method : methods){
+            String name = method.getName();
+            if (name.startsWith("set") && name.length() > 3){
+                if (method.getParameterTypes().length == 1){
+                    name = PropertyNamer.methodToProperty(name);
+                    addMethodConflict(conflictingSetters, name, method);
+                }
+            }
+        }
+        resolveSetterConflicts(conflictingSetters);
 
     }
 
+    private void resolveSetterConflicts(Map<String, List<Method>> conflictingSetters) {
+        for (String propName : conflictingSetters.keySet()) {
+            List<Method> setters = conflictingSetters.get(propName);
+            Method firstMethod = setters.get(0);
+            if (setters.size() == 1){
+                addSetMethod(propName,firstMethod);
+            } else {
+
+            }
+        }
+    }
+
+    private void addSetMethod(String name, Method method) {
+        if (isValidPropertyName(name)) {
+            setMethods.put(name, new MethodInvoker(method));
+            setTypes.put(name, method.getParameterTypes()[0]);
+        }
+    }
+
+    private void addFields(Class<?> clazz) {
+    }
+
+
+    private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
+        for (String propName : conflictingGetters.keySet()) {
+            List<Method> getters = conflictingGetters.get(propName);
+            Iterator<Method> iterator = getters.iterator();
+            Method firstMethod = iterator.next();
+            if (getters.size() == 1) {
+                addGetMethod(propName,firstMethod);
+            } else {
+                Method getter = firstMethod;
+                Class<?> getterType = firstMethod.getReturnType();
+                while (iterator.hasNext()) {
+                    Method method = iterator.next();
+                    Class<?> methodType = method.getReturnType();
+                    if (methodType.equals(getterType)) {
+                        throw new RuntimeException("Illegal overloaded getter method with ambiuous type for property " +
+                                propName + " in class " + firstMethod.getDeclaringClass() +
+                                ".  This breaks the JavaBeans " + " specification and can cause unpredicatble results.");
+                    } else if (methodType.isAssignableFrom(getterType)) {
+                        // OK getter type is descendant
+                    } else if (getterType.isAssignableFrom(methodType)) {
+                        getter = method;
+                        getterType = methodType;
+                    } else {
+                        throw new RuntimeException("Illegal overloaded getter method with ambiguous type for property " +
+                                propName + " in class " + firstMethod.getDeclaringClass() + ". This breaks the JavaBeans "
+                        + "specification and can cause unpredicatble results.");
+                    }
+                }
+                addGetMethod(propName,getter);
+            }
+        }
+    }
+
+    private void addGetMethod(String name, Method method) {
+        if (isValidPropertyName(name)){
+            getMethods.put(name, new MethodInvoker(method));
+            getTypes.put(name,method.getReturnType());
+        }
+    }
+
+    private boolean isValidPropertyName(String name) {
+        return !(name.startsWith("$") || "serialVersionUID".equals(name) || "class".equals(name));
+    }
+
+    private void addMethodConflict(Map<String, List<Method>> conflictingMethods, String name, Method method) {
+        List<Method> list = conflictingMethods.computeIfAbsent(name, k -> new ArrayList<Method>());
+        list.add(method);
+    }
+
+
     private Method[] getClassMethods(Class<?> cls) {
-        Map<String,Method> uniqueMethods = new HashMap<>();
+        Map<String, Method> uniqueMethods = new HashMap<>();
         Class<?> currentClass = cls;
         while (currentClass != null) {
-            addUniqueMethods(uniqueMethods,currentClass.getDeclaredMethods());
+            addUniqueMethods(uniqueMethods, currentClass.getDeclaredMethods());
             // we also need to look for interface methods
             // because the class may be abstract
             Class<?>[] interfaces = currentClass.getInterfaces();
             for (Class<?> anInterface : interfaces) {
-                addUniqueMethods(uniqueMethods,anInterface.getMethods());
+                addUniqueMethods(uniqueMethods, anInterface.getMethods());
             }
             currentClass = currentClass.getSuperclass();
         }
@@ -90,11 +224,11 @@ public class Reflector {
     private void addUniqueMethods(Map<String, Method> uniqueMethods, Method[] methods) {
         for (Method currentMethod : methods) {
             // ？？
-            if (!currentMethod.isBridge()){
+            if (!currentMethod.isBridge()) {
                 //取得签名
                 String signature = getSignature(currentMethod);
 
-                if (!uniqueMethods.containsKey(signature)){
+                if (!uniqueMethods.containsKey(signature)) {
                     if (canAccessPrivateMethods()) {
                         try {
                             currentMethod.setAccessible(true);
@@ -102,7 +236,7 @@ public class Reflector {
                             //Ignore. This is only a final precaution, nothing we can do.
                         }
                     }
-                    uniqueMethods.put(signature,currentMethod);
+                    uniqueMethods.put(signature, currentMethod);
                 }
 
             }
@@ -118,7 +252,7 @@ public class Reflector {
         sb.append(method.getName());
         Class<?>[] parameters = method.getParameterTypes();
         for (int i = 0; i < parameters.length; i++) {
-            if (i == 0){
+            if (i == 0) {
                 sb.append(':');
             } else {
                 sb.append(',');
@@ -136,7 +270,7 @@ public class Reflector {
                 securityManager.checkPermission(new ReflectPermission("suppressAccessChecks"));
             }
 
-        } catch (SecurityException e){
+        } catch (SecurityException e) {
             return false;
         }
         return true;
