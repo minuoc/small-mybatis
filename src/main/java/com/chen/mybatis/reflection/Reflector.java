@@ -1,12 +1,12 @@
 package com.chen.mybatis.reflection;
 
+import com.chen.mybatis.reflection.invoker.GetFieldInvoker;
 import com.chen.mybatis.reflection.invoker.Invoker;
 import com.chen.mybatis.reflection.invoker.MethodInvoker;
+import com.chen.mybatis.reflection.invoker.SetFieldInvoker;
 import com.chen.mybatis.reflection.property.PropertyNamer;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.ReflectPermission;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -71,6 +71,15 @@ public class Reflector {
         addSetMethods(clazz);
         // 加入字段
         addFields(clazz);
+        readablePropertyNames = getMethods.keySet().toArray(new String[getMethods.keySet().size()]);
+        writeablePropertyNames = setMethods.keySet().toArray(new String[setMethods.keySet().size()]);
+        for (String propName : readablePropertyNames) {
+            caseInsensitivePropertyMap.put(propName.toUpperCase(Locale.ENGLISH), propName);
+        }
+        for (String propName : writeablePropertyNames) {
+            caseInsensitivePropertyMap.put(propName.toUpperCase(Locale.ENGLISH), propName);
+        }
+
     }
 
 
@@ -137,7 +146,30 @@ public class Reflector {
             if (setters.size() == 1){
                 addSetMethod(propName,firstMethod);
             } else {
+                Class<?> expectedType = getTypes.get(propName);
+                if (expectedType!= null) {
+                    throw new RuntimeException("Illegal overloaded setter method with ambiguous type for property "
+                            + propName + " in class " + firstMethod.getDeclaringClass() + ".  This breaks the JavaBeans " +
+                            "specification and can cause unpredicatble results.");
+                } else {
+                    Iterator<Method> methods = setters.iterator();
+                    Method setter = null;
+                    while (methods.hasNext()) {
+                        Method method = methods.next();
+                        if(method.getParameterTypes().length == 1 &&
+                        expectedType.equals(method.getParameterTypes()[0])){
+                            setter = method;
+                            break;
+                        }
+                    }
+                    if (setter == null) {
+                        throw new RuntimeException("Illegal overloaded setter method with ambiguous type for property "
+                                + propName + " in class " + firstMethod.getDeclaringClass() + ".  This breaks the JavaBeans " +
+                                "specification and can cause unpredicatble results.");
 
+                    }
+                    addSetMethod(propName,setter);
+                }
             }
         }
     }
@@ -150,7 +182,53 @@ public class Reflector {
     }
 
     private void addFields(Class<?> clazz) {
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            if (canAccessPrivateMethods()) {
+                try {
+                    field.setAccessible(true);
+                } catch (Exception e) {
+                    // Ignored.
+                }
+            }
+            if (field.isAccessible()) {
+                if (!setMethods.containsKey(field.getName())) {
+                    // issue #379 - removed the check for final because JDK 1.5 allows
+                    // modification of final fields through reflection (JSR-133). (JGB)
+                    // pr #16 - final static can only be set by the classloader
+                    int modifier = field.getModifiers();
+                    if(!(Modifier.isFinal(modifier) || Modifier.isStatic(modifier))) {
+                        addSetField(field);
+                    }
+                }
+                if (!getMethods.containsKey(field.getName())) {
+                    addGetField(field);
+                }
+            }
+
+
+        }
+        if (clazz.getSuperclass()!= null) {
+            addFields(clazz.getSuperclass());
+        }
+
     }
+
+
+    private void addSetField(Field field) {
+        if (isValidPropertyName(field.getName())) {
+            setMethods.put(field.getName(), new SetFieldInvoker(field));
+            setTypes.put(field.getName(), field.getType());
+        }
+    }
+
+    private void addGetField(Field field) {
+        if (isValidPropertyName(field.getName())) {
+            getMethods.put(field.getName(), new GetFieldInvoker(field));
+            getTypes.put(field.getName(), field.getType());
+        }
+    }
+
 
 
     private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
