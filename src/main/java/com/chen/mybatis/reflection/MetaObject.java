@@ -1,5 +1,6 @@
 package com.chen.mybatis.reflection;
 
+import com.chen.mybatis.reflection.factory.ObjectFactory;
 import com.chen.mybatis.reflection.wrapper.ObjectWrapper;
 
 /**
@@ -15,4 +16,6 @@ public class MetaObject {
     private ObjectWrapper objectWrapper;
 
     private ObjectFactory objectFactory;
+
+
 }

@@ -15,7 +15,7 @@ public interface ObjectFactory {
 
     <T> T create(Class<T> type);
 
-    <T> T create(Class<T> constructArgTypes, List<Object> constructArgs);
+    <T> T create(Class<?> type,Class<T> constructArgTypes, List<Object> constructArgs);
 
     <T> boolean isCollection(Class<T> type);
 }

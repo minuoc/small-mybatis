@@ -1,6 +1,10 @@
 package com.chen.mybatis.reflection.wrapper;
 
+import com.chen.mybatis.reflection.MetaObject;
+import com.chen.mybatis.reflection.factory.ObjectFactory;
 import com.chen.mybatis.reflection.property.PropertyTokenizer;
+
+import java.util.List;
 
 /**
  * description
@@ -26,6 +30,20 @@ public interface ObjectWrapper {
 
     boolean hasGetter(String name);
 
-    MetaObject instantiatePropertyValue()
+    /**
+     * 实例化属性
+     * @param name
+     * @param prop
+     * @param objectFactory
+     * @return
+     */
+    MetaObject instantiatePropertyValue(String name, PropertyTokenizer prop, ObjectFactory objectFactory);
+
+
+    boolean isCollection();
+
+    void add(Object element);
+
+    <E> void addAll(List<E> element);
 
 }
