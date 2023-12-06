@@ -354,5 +354,94 @@ public class Reflector {
         return true;
     }
 
+    public Class<?> getType(){
+        return type;
+    }
 
+    public Constructor<?> getDefaultConstructor(){
+        if (defaultConstructor != null){
+            return defaultConstructor;
+        } else {
+            throw new RuntimeException("There is no default constructor for " + type);
+        }
+    }
+
+    public boolean hasDefaultConstructor(){
+        return defaultConstructor!= null;
+    }
+
+    public Class<?> getSetterType(String propertyName) {
+        Class<?>  clazz = setTypes.get(propertyName);
+        if (clazz == null) {
+            throw new RuntimeException("There is no setter for peroperty named '" + propertyName + "' in '" + type + "'");
+        }
+        return clazz;
+    }
+
+    public Invoker getGetInvoker(String propertyName) {
+        Invoker method = getMethods.get(propertyName);
+        if (method == null) {
+            throw new RuntimeException("There is no getter for property named '" + propertyName + "' in '" + type + "'");
+        }
+        return method;
+    }
+
+    public Invoker getSetInvoker(String propertyName) {
+        Invoker method = setMethods.get(propertyName);
+        if (method == null) {
+            throw new RuntimeException("There is no setter for property named '" + propertyName + "' in '" + type + "'");
+        }
+        return method;
+    }
+
+    public Class<?> getGetterType(String propertyName) {
+        Class<?>  clazz = getTypes.get(propertyName);
+        if (clazz == null) {
+            throw new RuntimeException("There is no getter for property named '" + propertyName + "' in '" + type + "'");
+        }
+        return clazz;
+    }
+
+
+    public String[] getGetablePropertyNames(){
+        return readablePropertyNames;
+    }
+
+    public String[] getSetablePropertyNames(){
+        return writeablePropertyNames;
+    }
+
+    public boolean hasSetter(String propertyName) {
+        return setMethods.keySet().contains(propertyName);
+    }
+
+    public boolean hasGetter(String propertyName) {
+        return getMethods.keySet().contains(propertyName);
+    }
+
+
+    public String findPropertyName(String methodName) {
+        return caseInsensitivePropertyMap.get(methodName.toUpperCase(Locale.ENGLISH));
+    }
+
+    public static Reflector forClass(Class<?> clazz) {
+        if (classCacheEnabled) {
+            Reflector cached = REFLECTOR_MAP.get(clazz);
+            if (cached == null) {
+                cached = new Reflector(clazz);
+                REFLECTOR_MAP.put(clazz,cached);
+            }
+            return cached;
+        }else {
+            return new Reflector(clazz);
+        }
+    }
+
+    public static void setClassCacheEnabled(boolean classCacheEnabled) {
+        Reflector.classCacheEnabled = classCacheEnabled;
+    }
+
+    public static boolean isClassCacheEnabled(){
+        return classCacheEnabled;
+    }
 }
