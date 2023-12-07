@@ -14,7 +14,7 @@ import java.util.List;
  */
 public interface ObjectWrapper {
 
-    Object get(Object object);
+    Object get(PropertyTokenizer prop);
 
     void set(PropertyTokenizer prop, Object value);
 
@@ -22,9 +22,11 @@ public interface ObjectWrapper {
 
     String[] getGetterNames();
 
-    String[] getSetterType(String name);
+    String[] getSetterNames();
 
-    String[] getGetterType(String name);
+    Class<?> getSetterType(String name);
+
+    Class<?> getGetterType(String name);
 
     boolean hasSetter(String name);
 
