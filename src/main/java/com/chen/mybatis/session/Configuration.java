@@ -13,12 +13,19 @@ import com.chen.mybatis.executor.statement.StatementHandler;
 import com.chen.mybatis.mapping.BoundSql;
 import com.chen.mybatis.mapping.Environment;
 import com.chen.mybatis.mapping.MappedStatement;
+import com.chen.mybatis.reflection.MetaObject;
+import com.chen.mybatis.reflection.factory.DefaultObjectFactory;
+import com.chen.mybatis.reflection.factory.ObjectFactory;
+import com.chen.mybatis.reflection.wrapper.DefaultObjectWrapperFactory;
+import com.chen.mybatis.reflection.wrapper.ObjectWrapperFactory;
 import com.chen.mybatis.transaction.Transaction;
 import com.chen.mybatis.transaction.jdc.JdbcTransactionFactory;
 import com.chen.mybatis.type.TypeAliasRegistry;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class Configuration {
 
@@ -42,6 +49,17 @@ public class Configuration {
      * 类型别名注册机
      */
     protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
+
+    /**
+     * 对象工厂 和 对象包装工厂
+     */
+    protected ObjectFactory objectFactory = new DefaultObjectFactory();
+
+    protected ObjectWrapperFactory objectWrapperFactory = new DefaultObjectWrapperFactory();
+
+    protected final Set<String> loadedResources = new HashSet<>();
+
+    protected String databaseId;
 
     public Configuration() {
         typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
@@ -87,19 +105,37 @@ public class Configuration {
         this.environment = environment;
     }
 
+
+    public Object getDatabaseId() {
+        return databaseId;
+    }
+
     /**
      * 创建结果集处理器
+     *
      * @param executor
      * @param mappedStatement
      * @param boundSql
      * @return
      */
     public ResultSetHandler newResultSetHandler(Executor executor, MappedStatement mappedStatement, BoundSql boundSql) {
-        return new DefaultResultSetHandler(executor,mappedStatement,boundSql);
+        return new DefaultResultSetHandler(executor, mappedStatement, boundSql);
+    }
+
+
+    /**
+     * 创建生产执行器
+     *
+     * @param tx
+     * @return
+     */
+    public Executor newExecutor(Transaction tx) {
+        return new SimpleExecutor(this, tx);
     }
 
     /**
      * 创建 语句处理器
+     *
      * @param executor
      * @param ms
      * @param parameter
@@ -108,15 +144,28 @@ public class Configuration {
      * @return
      */
     public StatementHandler newStatementHandler(Executor executor, MappedStatement ms, Object parameter, ResultHandler resultHandler, BoundSql boundSql) {
-        return new PrepareStatementHandler(executor,ms,parameter,resultHandler,boundSql);
+        return new PrepareStatementHandler(executor, ms, parameter, resultHandler, boundSql);
     }
 
+
     /**
-     * 创建生产执行器
-     * @param tx
+     * 创建元对象
+     *
+     * @param parameterObject
      * @return
      */
-    public Executor newExecutor(Transaction tx) {
-        return new SimpleExecutor(this,tx);
+    public MetaObject newMetaObject(Object parameterObject) {
+        return MetaObject.forObject(parameterObject, objectFactory, objectWrapperFactory);
     }
+
+
+    public boolean isResourceLoaded(String resource) {
+        return loadedResources.contains(resource);
+    }
+
+    public void addLoadedResource(String resource) {
+        loadedResources.add(resource);
+    }
+
+
 }
