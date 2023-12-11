@@ -36,7 +36,7 @@ public class XmlMapperBuilder extends BaseBuilder {
         // 如果当前资源没有加载过再加载，防止重复加载
         if (!configuration.isResourceLoaded(resource)) {
             configurationElement(element);
-            //
+            // 标记一下，已经加载过了
             configuration.addLoadedResource(resource);
             // 绑定映射器 到 namespace
             configuration.addMapper(Resources.classForName(currentNameSpace));
@@ -65,7 +65,8 @@ public class XmlMapperBuilder extends BaseBuilder {
 
     private void buildStatementFromContext(List<Element> list) {
         for (Element element : list) {
-            final XMLStatementBuilder statementParser = new XMLStatementBuilder();
+            final XMLStatementBuilder statementParser = new XMLStatementBuilder(configuration,element,currentNameSpace);
+            statementParser.parseStatementNode();
         }
     }
 

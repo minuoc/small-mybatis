@@ -21,6 +21,21 @@ public class XMLStatementBuilder extends BaseBuilder {
     }
 
 
+    //解析语句(select|insert|update|delete)
+    //<select
+    //  id="selectPerson"
+    //  parameterType="int"
+    //  parameterMap="deprecated"
+    //  resultType="hashmap"
+    //  resultMap="personResultMap"
+    //  flushCache="false"
+    //  useCache="true"
+    //  timeout="10000"
+    //  fetchSize="256"
+    //  statementType="PREPARED"
+    //  resultSetType="FORWARD_ONLY">
+    //  SELECT * FROM PERSON WHERE ID = #{id}
+    //</select>
     public void parseStatementNode(){
 
         String id = element.attributeValue("id");
@@ -40,7 +55,7 @@ public class XMLStatementBuilder extends BaseBuilder {
         SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
 
         //获取默认语言驱动器
-        Class<?> langClass =
+        Class<?> langClass = configuration.getLanguageRegistry();
 
 
     }

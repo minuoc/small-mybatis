@@ -1,7 +1,6 @@
 package com.chen.mybatis.session;
 
-import com.chen.mybatis.builder.XmlConfigBuilder;
-import com.chen.mybatis.session.defaults.DefaultSqlSession;
+import com.chen.mybatis.builder.xml.XmlConfigBuilder;
 import com.chen.mybatis.session.defaults.DefaultSqlSessionFactory;
 
 import java.io.Reader;

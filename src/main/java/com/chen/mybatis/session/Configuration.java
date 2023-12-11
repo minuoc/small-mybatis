@@ -168,4 +168,7 @@ public class Configuration {
     }
 
 
+    public LanguageRegistry getLanguageRegistry() {
+        return languageRegistry;
+    }
 }
