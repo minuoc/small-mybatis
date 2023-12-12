@@ -57,7 +57,7 @@ public class SqlSourceBuilder extends BaseBuilder {
          */
 
         private ParameterMapping buildParameterMapping(String content) {
-            // 先解析参数映射，就是转化成一个HashMap | #{favouriteSection,jdbtType = VARCHAR}
+            // 先解析参数映射，就是转化成一个HashMap | #{favouriteSection,jdbcType = VARCHAR}
             Map<String, String> propertiesMap = new ParameterExpression(content);
             String property = propertiesMap.get("property");
             Class<?> propertyType = parameterType;

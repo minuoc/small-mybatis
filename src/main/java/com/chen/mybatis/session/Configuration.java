@@ -18,9 +18,11 @@ import com.chen.mybatis.reflection.factory.DefaultObjectFactory;
 import com.chen.mybatis.reflection.factory.ObjectFactory;
 import com.chen.mybatis.reflection.wrapper.DefaultObjectWrapperFactory;
 import com.chen.mybatis.reflection.wrapper.ObjectWrapperFactory;
+import com.chen.mybatis.scripting.LanguageDriverRegistry;
 import com.chen.mybatis.transaction.Transaction;
 import com.chen.mybatis.transaction.jdc.JdbcTransactionFactory;
 import com.chen.mybatis.type.TypeAliasRegistry;
+import com.chen.mybatis.type.TypeHandlerRegistry;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,6 +52,13 @@ public class Configuration {
      */
     protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
 
+    protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
+
+    /**
+     * 类型处理器注册机
+     */
+    protected final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry();
+
     /**
      * 对象工厂 和 对象包装工厂
      */
@@ -66,6 +75,8 @@ public class Configuration {
         typeAliasRegistry.registerAlias("DRUID", DruidDataSourceFactory.class);
         typeAliasRegistry.registerAlias("UNPOOLED", UnpooledDataSourceFactory.class);
         typeAliasRegistry.registerAlias("POOLED", PooledDataSourceFactory.class);
+
+        languageRegistry.setDefaultDriverClass(com.chen.mybatis.scripting.xml.XMLLanguageDriver.class);
     }
 
     public void addMappers(String packageName) {
@@ -168,7 +179,7 @@ public class Configuration {
     }
 
 
-    public LanguageRegistry getLanguageRegistry() {
+    public LanguageDriverRegistry getLanguageRegistry() {
         return languageRegistry;
     }
 }

@@ -22,7 +22,7 @@ public class LanguageDriverRegistry {
             throw new IllegalArgumentException("null is not a valid language Driver");
         }
         if (!LanguageDriver.class.isAssignableFrom(cls)) {
-            throw new RuntimeException(cls.getName() + " does not implements " + LanguageDriver.class.getName())
+            throw new RuntimeException(cls.getName() + " does not implements " + LanguageDriver.class.getName());
         }
         // 如果没注册过，再去注册
         LanguageDriver driver = LANGUAGE_DRIVER_MAP.get(cls);
@@ -37,6 +37,25 @@ public class LanguageDriverRegistry {
         }
     }
 
+    public LanguageDriver getDriver(Class<?> cls) {
+        return LANGUAGE_DRIVER_MAP.get(cls);
+    }
 
+    public LanguageDriver getDefaultDriver() {
+        return getDriver(getDefaultDriverClass());
+    }
+
+    private Class<?> getDefaultDriverClass() {
+        return defaultDriverClass;
+    }
+
+    /**
+     * configuration() 有调用，默认的为 XMLLanguageDriver
+     * @param defaultDriverClass
+     */
+    public void setDefaultDriverClass(Class<?> defaultDriverClass) {
+        register(defaultDriverClass);
+        this.defaultDriverClass = defaultDriverClass;
+    }
 
 }
