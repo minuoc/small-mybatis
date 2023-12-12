@@ -1,7 +1,10 @@
 package com.chen.mybatis.builder.xml;
 
 import com.chen.mybatis.builder.BaseBuilder;
+import com.chen.mybatis.mapping.MappedStatement;
 import com.chen.mybatis.mapping.SqlCommandType;
+import com.chen.mybatis.mapping.SqlSource;
+import com.chen.mybatis.scripting.LanguageDriver;
 import com.chen.mybatis.session.Configuration;
 import org.dom4j.Element;
 
@@ -55,8 +58,16 @@ public class XMLStatementBuilder extends BaseBuilder {
         SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
 
         //获取默认语言驱动器
-        Class<?> langClass = configuration.getLanguageRegistry();
+        Class<?> langClass = configuration.getLanguageRegistry().getDefaultDriverClass();
+        LanguageDriver langDriver = configuration.getLanguageRegistry().getDriver(langClass);
 
+        SqlSource sqlSource = langDriver.createSqlSource(configuration,element,parameterTypeClass);
+        MappedStatement mappedStatement =
+                new MappedStatement.Builder(configuration,currentNameSpace + "." + id,
+                sqlCommandType,sqlSource,resultTypeClass).build();
+
+        // 添加解析 SQL
+        configuration.addMappedStatement(mappedStatement);
 
     }
 

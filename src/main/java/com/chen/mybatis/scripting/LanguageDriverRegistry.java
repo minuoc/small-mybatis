@@ -45,7 +45,7 @@ public class LanguageDriverRegistry {
         return getDriver(getDefaultDriverClass());
     }
 
-    private Class<?> getDefaultDriverClass() {
+    public Class<?> getDefaultDriverClass() {
         return defaultDriverClass;
     }
 
