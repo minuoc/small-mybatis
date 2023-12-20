@@ -29,6 +29,7 @@ public class MappedStatement {
             mappedStatement.configuration = configuration;
             mappedStatement.id = id;
             mappedStatement.sqlCommandType = sqlCommandType;
+            mappedStatement.sqlSource = sqlSource;
             mappedStatement.resultType = resultType;
         }
         public MappedStatement build(){

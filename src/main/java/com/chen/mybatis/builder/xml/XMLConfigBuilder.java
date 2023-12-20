@@ -3,10 +3,7 @@ package com.chen.mybatis.builder.xml;
 import com.chen.mybatis.builder.BaseBuilder;
 import com.chen.mybatis.datasource.DataSourceFactory;
 import com.chen.mybatis.io.Resources;
-import com.chen.mybatis.mapping.BoundSql;
 import com.chen.mybatis.mapping.Environment;
-import com.chen.mybatis.mapping.MappedStatement;
-import com.chen.mybatis.mapping.SqlCommandType;
 import com.chen.mybatis.session.Configuration;
 import com.chen.mybatis.transaction.TransactionFactory;
 import org.dom4j.Document;
@@ -16,13 +13,10 @@ import org.dom4j.io.SAXReader;
 import org.xml.sax.InputSource;
 
 import javax.sql.DataSource;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * XML配置构建器，建造者模式
@@ -30,11 +24,11 @@ import java.util.regex.Pattern;
  * @author : e-Lufeng.Chen
  * @create 2023/12/11
  */
-public class XmlConfigBuilder extends BaseBuilder {
+public class XMLConfigBuilder extends BaseBuilder {
 
     private Element root;
 
-    public XmlConfigBuilder(Reader reader) {
+    public XMLConfigBuilder(Reader reader) {
         //调用弗雷初始化 Configuration
         super(new Configuration());
         SAXReader saxReader = new SAXReader();
@@ -103,7 +97,7 @@ public class XmlConfigBuilder extends BaseBuilder {
             String resource = e.attributeValue("resource");
             InputStream inputStream = Resources.getResourceAsStream(resource);
             // 在for 循环里每个mapper 都重新new一个XMLMapperBuilder,来解析
-            XmlMapperBuilder mapperParser = new XmlMapperBuilder(inputStream, configuration, resource);
+            XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource);
             mapperParser.parse();
 
         }

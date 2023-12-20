@@ -19,6 +19,7 @@ import com.chen.mybatis.reflection.factory.ObjectFactory;
 import com.chen.mybatis.reflection.wrapper.DefaultObjectWrapperFactory;
 import com.chen.mybatis.reflection.wrapper.ObjectWrapperFactory;
 import com.chen.mybatis.scripting.LanguageDriverRegistry;
+import com.chen.mybatis.scripting.xmltags.XMLLanguageDriver;
 import com.chen.mybatis.transaction.Transaction;
 import com.chen.mybatis.transaction.jdc.JdbcTransactionFactory;
 import com.chen.mybatis.type.TypeAliasRegistry;
@@ -76,7 +77,7 @@ public class Configuration {
         typeAliasRegistry.registerAlias("UNPOOLED", UnpooledDataSourceFactory.class);
         typeAliasRegistry.registerAlias("POOLED", PooledDataSourceFactory.class);
 
-        languageRegistry.setDefaultDriverClass(com.chen.mybatis.scripting.xml.XMLLanguageDriver.class);
+        languageRegistry.setDefaultDriverClass(XMLLanguageDriver.class);
     }
 
     public void addMappers(String packageName) {

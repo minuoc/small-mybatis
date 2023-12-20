@@ -11,7 +11,7 @@ import org.dom4j.io.SAXReader;
 import java.io.InputStream;
 import java.util.List;
 
-public class XmlMapperBuilder extends BaseBuilder {
+public class XMLMapperBuilder extends BaseBuilder {
 
     private Element element;
 
@@ -20,11 +20,11 @@ public class XmlMapperBuilder extends BaseBuilder {
     private String currentNameSpace;
 
 
-    public XmlMapperBuilder(InputStream inputStream, Configuration configuration, String resource) throws DocumentException {
+    public XMLMapperBuilder(InputStream inputStream, Configuration configuration, String resource) throws DocumentException {
         this(new SAXReader().read(inputStream),configuration,resource);
     }
 
-    public XmlMapperBuilder(Document document,Configuration configuration, String resource) {
+    public XMLMapperBuilder(Document document, Configuration configuration, String resource) {
         super(configuration);
         this.element = document.getRootElement();
         this.resource = resource;

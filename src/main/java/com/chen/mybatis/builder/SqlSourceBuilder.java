@@ -7,6 +7,7 @@ import com.chen.mybatis.parsing.TokenHandler;
 import com.chen.mybatis.reflection.MetaObject;
 import com.chen.mybatis.session.Configuration;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +30,7 @@ public class SqlSourceBuilder extends BaseBuilder {
 
 
     private static class ParameterMappingTokenHandler extends BaseBuilder implements TokenHandler {
-        private List<ParameterMapping> parameterMappings;
+        private List<ParameterMapping> parameterMappings = new ArrayList<>();
         private Class<?> parameterType;
         private MetaObject metaParameters;
 
