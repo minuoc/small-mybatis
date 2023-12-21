@@ -17,6 +17,15 @@ public final class TypeHandlerRegistry {
     private Map<Class<?>,TypeHandler<?>> ALL_TYPE_HANDLER_MAP = new HashMap<>();
 
     public TypeHandlerRegistry() {
+        register(Long.class,new LongTypeHandler());
+        register(long.class,new LongTypeHandler());
+        register(String.class,new StringTypeHandler());
+        register(String.class,JdbcType.CHAR,new StringTypeHandler());
+        register(String.class,JdbcType.VARCHAR,new StringTypeHandler());
+    }
+
+    private <T> void register(Type javaType, TypeHandler<? extends T> typeHandler) {
+        register(javaType,null,typeHandler);
     }
 
     private void register(Type javaType, JdbcType jdbcType, TypeHandler<?> typeHandler) {
@@ -25,5 +34,32 @@ public final class TypeHandlerRegistry {
             map.put(jdbcType,typeHandler);
         }
         ALL_TYPE_HANDLER_MAP.put(typeHandler.getClass(),typeHandler);
+    }
+
+
+    public <T> TypeHandler<T> getTypeHandler(Class<T> type, JdbcType jdbType) {
+        return getTypeHandler((Type) type, jdbType);
+    }
+
+    public boolean hasTypeHandler(Class<?> javaType) {
+        return hasTypeHandler(javaType, null);
+    }
+
+    public boolean hasTypeHandler(Class<?> javaType, JdbcType jdbcType) {
+        return javaType != null && getTypeHandler(javaType, jdbcType)!= null;
+    }
+
+
+    private <T> TypeHandler<T> getTypeHandler(Type type, JdbcType jdbType) {
+        Map<JdbcType,TypeHandler<?>> jdbcHandlerMap = TYPE_HANDLER_MAP.get(type);
+        TypeHandler<?> handler = null;
+        if (jdbcHandlerMap!= null) {
+            handler = jdbcHandlerMap.get(jdbType);
+            if (handler == null) {
+                handler = jdbcHandlerMap.get(null);
+            }
+        }
+        // type drives generics here;
+        return (TypeHandler<T>) handler;
     }
 }

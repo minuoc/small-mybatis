@@ -37,7 +37,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     //  fetchSize="256"
     //  statementType="PREPARED"
     //  resultSetType="FORWARD_ONLY">
-    //  SELECT * FROM PERSON WHERE ID = #{id}
+    //  SELECT * FROM PERSON WHERE ID = #{id}1·
     //</select>
     public void parseStatementNode(){
 

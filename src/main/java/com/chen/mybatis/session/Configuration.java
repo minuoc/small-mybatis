@@ -170,6 +170,13 @@ public class Configuration {
         return MetaObject.forObject(parameterObject, objectFactory, objectWrapperFactory);
     }
 
+    /**
+     * 类型处理器 注册机
+     * @return
+     */
+    public TypeHandlerRegistry getTypeHandlerRegistry(){
+        return typeHandlerRegistry;
+    }
 
     public boolean isResourceLoaded(String resource) {
         return loadedResources.contains(resource);
