@@ -35,11 +35,11 @@ public class DefaultParameterHandler implements ParameterHandler {
     private Configuration configuration;
 
     public DefaultParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
-       this.mappedStatement = mappedStatement;
-       this.configuration = mappedStatement.getConfiguration();
-       this.typeHandlerRegistry = mappedStatement.getConfiguration().getTypeHandlerRegistry();
-       this.parameterObject = parameterObject;
-       this.boundSql = boundSql;
+        this.mappedStatement = mappedStatement;
+        this.configuration = mappedStatement.getConfiguration();
+        this.typeHandlerRegistry = mappedStatement.getConfiguration().getTypeHandlerRegistry();
+        this.parameterObject = parameterObject;
+        this.boundSql = boundSql;
     }
 
     @Override
@@ -55,7 +55,7 @@ public class DefaultParameterHandler implements ParameterHandler {
                 ParameterMapping parameterMapping = parameterMappings.get(i);
                 String propertyName = parameterMapping.getProperty();
                 Object value;
-                if(typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {
+                if (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {
                     value = parameterObject;
                 } else {
                     MetaObject metaObject = configuration.newMetaObject(parameterObject);
@@ -65,7 +65,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 
                 // 设置参数
                 TypeHandler typeHandler = parameterMapping.getTypeHandler();
-                typeHandler.setParameter(ps, i + 1; value, jdbcType);
+                typeHandler.setParameter(ps, i + 1, value, jdbcType);
             }
         }
     }

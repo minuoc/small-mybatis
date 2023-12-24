@@ -1,5 +1,6 @@
 package com.chen.mybatis.executor.parameter;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
@@ -18,8 +19,8 @@ public interface ParameterHandler {
 
     /**
      * 设置参数
-     * @param parameterObject
+     * @param ps
      * @throws SQLException
      */
-    void setParameters(Object parameterObject) throws SQLException;
+    void setParameters(PreparedStatement ps) throws SQLException;
 }
