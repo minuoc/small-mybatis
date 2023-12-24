@@ -1,6 +1,7 @@
 package com.chen.mybatis.executor.statement;
 
 import com.chen.mybatis.executor.Executor;
+import com.chen.mybatis.executor.parameter.ParameterHandler;
 import com.chen.mybatis.executor.resultset.ResultSetHandler;
 import com.chen.mybatis.mapping.BoundSql;
 import com.chen.mybatis.mapping.MappedStatement;
@@ -27,6 +28,8 @@ public abstract class BaseStatementHandler implements StatementHandler{
     protected final Object parameterObject;
     protected final ResultSetHandler resultSetHandler;
 
+    protected final ParameterHandler parameterHandler;
+
     protected BoundSql boundSql;
 
     protected BaseStatementHandler( Executor executor, MappedStatement mappedStatement, Object parameterObject, ResultHandler resultHandler,BoundSql boundSql) {
@@ -37,6 +40,7 @@ public abstract class BaseStatementHandler implements StatementHandler{
 
         // 参数和 结果集
         this.parameterObject = parameterObject;
+        this.parameterHandler = configuration.newParameterHandler(mappedStatement,parameterObject,boundSql);
         this.resultSetHandler = configuration.newResultSetHandler(executor,mappedStatement,boundSql);
     }
 

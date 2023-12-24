@@ -45,7 +45,7 @@ public class ParameterMapping {
         }
 
         public ParameterMapping build(){
-            if (parameterMapping.typeHandler == null && parameterMapping.jdbcType!= null) {
+            if (parameterMapping.typeHandler == null && parameterMapping.javaType != null) {
                 Configuration configuration = parameterMapping.configuration;
                 TypeHandlerRegistry typeHandlerRegistry = configuration.getTypeHandlerRegistry();
                 parameterMapping.typeHandler = typeHandlerRegistry.getTypeHandler(parameterMapping.javaType, parameterMapping.jdbcType);

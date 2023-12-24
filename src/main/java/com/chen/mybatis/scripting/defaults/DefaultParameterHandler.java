@@ -1,5 +1,6 @@
 package com.chen.mybatis.scripting.defaults;
 
+import com.alibaba.fastjson.JSON;
 import com.chen.mybatis.executor.parameter.ParameterHandler;
 import com.chen.mybatis.mapping.BoundSql;
 import com.chen.mybatis.mapping.MappedStatement;
@@ -62,6 +63,8 @@ public class DefaultParameterHandler implements ParameterHandler {
                     value = metaObject.getValue(propertyName);
                 }
                 JdbcType jdbcType = parameterMapping.getJdbcType();
+                //
+                logger.info("根据每个ParameterMapping中的TypeHandler设置对应的参数信息 value:{}", JSON.toJSONString(value));
 
                 // 设置参数
                 TypeHandler typeHandler = parameterMapping.getTypeHandler();

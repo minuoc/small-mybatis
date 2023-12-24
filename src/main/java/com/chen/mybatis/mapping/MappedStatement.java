@@ -1,5 +1,7 @@
 package com.chen.mybatis.mapping;
 
+import com.chen.mybatis.executor.parameter.ParameterHandler;
+import com.chen.mybatis.scripting.LanguageDriver;
 import com.chen.mybatis.session.Configuration;
 
 import java.util.Map;
@@ -19,8 +21,12 @@ public class MappedStatement {
 
     Class<?> resultType;
 
+    private LanguageDriver lang;
+
     public MappedStatement() {
     }
+
+
 
 
     public static class Builder {
@@ -31,6 +37,7 @@ public class MappedStatement {
             mappedStatement.sqlCommandType = sqlCommandType;
             mappedStatement.sqlSource = sqlSource;
             mappedStatement.resultType = resultType;
+            mappedStatement.lang = configuration.getDefaultScriptingLanguageInstance();
         }
         public MappedStatement build(){
             assert mappedStatement.configuration != null;
@@ -62,5 +69,10 @@ public class MappedStatement {
 
     public Class<?> getResultType() {
         return resultType;
+    }
+
+
+    public LanguageDriver getLang() {
+        return lang;
     }
 }
