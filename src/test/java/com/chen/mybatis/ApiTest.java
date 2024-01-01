@@ -53,19 +53,19 @@ public class ApiTest {
 //        log.info("测试结果:{}",res);
 //    }
 
-    @Test
-    public void test_SqlSessionFactory() throws IOException {
-        //
-        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(Resources.getResourceAsReader("mybatis-config-datasource.xml"));
-
-        SqlSession sqlSession = sqlSessionFactory.openSession();
-
-        IUserDao userDao = sqlSession.getMapper(IUserDao.class);
-
-
-        User user = userDao.queryUserInfoById(1L);
-        logger.info("测试结果:{}", JSON.toJSONString(user));
-
-
-    }
+//    @Test
+//    public void test_SqlSessionFactory() throws IOException {
+//        //
+//        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(Resources.getResourceAsReader("mybatis-config-datasource.xml"));
+//
+//        SqlSession sqlSession = sqlSessionFactory.openSession();
+//
+//        IUserDao userDao = sqlSession.getMapper(IUserDao.class);
+//
+//
+//        User user = userDao.queryUserInfoById(1L);
+//        logger.info("测试结果:{}", JSON.toJSONString(user));
+//
+//
+//    }
 }

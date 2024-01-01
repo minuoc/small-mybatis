@@ -1,6 +1,7 @@
 package com.chen.mybatis.builder.xml;
 
 import com.chen.mybatis.builder.BaseBuilder;
+import com.chen.mybatis.builder.MapperBuilderAssistant;
 import com.chen.mybatis.mapping.MappedStatement;
 import com.chen.mybatis.mapping.SqlCommandType;
 import com.chen.mybatis.mapping.SqlSource;
@@ -13,14 +14,15 @@ import java.util.Locale;
 
 public class XMLStatementBuilder extends BaseBuilder {
 
-    private String currentNameSpace;
+    private MapperBuilderAssistant builderAssistant;
 
     private Element element;
 
-    public XMLStatementBuilder(Configuration configuration, Element element, String currentNameSpace) {
+    public XMLStatementBuilder(Configuration configuration,MapperBuilderAssistant mapperBuilderAssistant, Element element) {
         super(configuration);
+        this.builderAssistant = mapperBuilderAssistant;
         this.element = element;
-        this.currentNameSpace = currentNameSpace;
+
     }
 
 
@@ -45,8 +47,11 @@ public class XMLStatementBuilder extends BaseBuilder {
 
         // 参数类型
         String parameterType = element.attributeValue("parameterType");
-
         Class<?> parameterTypeClass = resolveAlias(parameterType);
+
+        //外部应用 resultMap
+        String resultMap = element.attributeValue("resultMap");
+
 
         // 结果类型
         String resultType = element.attributeValue("resultType");
@@ -62,12 +67,9 @@ public class XMLStatementBuilder extends BaseBuilder {
         LanguageDriver langDriver = configuration.getLanguageRegistry().getDriver(langClass);
 
         SqlSource sqlSource = langDriver.createSqlSource(configuration,element,parameterTypeClass);
-        MappedStatement mappedStatement =
-                new MappedStatement.Builder(configuration,currentNameSpace + "." + id,
-                sqlCommandType,sqlSource,resultTypeClass).build();
 
-        // 添加解析 SQL
-        configuration.addMappedStatement(mappedStatement);
+        // 调用助手类
+        builderAssistant.addMappedStatement(id,sqlSource,sqlCommandType,parameterTypeClass,resultMap,resultTypeClass,langDriver);
 
     }
 
