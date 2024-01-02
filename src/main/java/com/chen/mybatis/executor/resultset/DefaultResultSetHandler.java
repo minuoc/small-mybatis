@@ -58,6 +58,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<Object> handleResultSets(Statement stmt) throws SQLException {
         final List<Object> multipleResults = new ArrayList<>();
         int resultSetCount = 0;
@@ -68,12 +69,9 @@ public class DefaultResultSetHandler implements ResultSetHandler {
             ResultMap resultMap = resultMaps.get(resultSetCount);
             handleResultSet(rsw, resultMap, multipleResults, null);
             rsw = getNextResultSet(stmt);
-
         }
 
         return multipleResults.size() == 1 ? (List<Object>) multipleResults.get(0) : multipleResults;
-
-
     }
 
 

@@ -18,9 +18,9 @@ public class DefaultResultHandler implements ResultHandler {
     }
 
     /**
-     * 通过 ObjectFactory 反射工具类，产生特定的list
-     * @param objectFactory
+     * 通过 ObjectFactory 反射工具类，产生特定的 List
      */
+    @SuppressWarnings("unchecked")
     public DefaultResultHandler(ObjectFactory objectFactory) {
         this.list = objectFactory.create(List.class);
     }

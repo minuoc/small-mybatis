@@ -6,5 +6,8 @@ public interface IUserDao {
 
 
 
-    User queryUserInfoById(long l);
+    User queryUserInfoById(long id);
+
+
+    User queryUserInfo(User req);
 }

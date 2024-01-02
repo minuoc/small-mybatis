@@ -21,43 +21,48 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
 
 
     @Override
-    public <T> T create(Class<?> type, List<Class<T>> constructArgTypes, List<Object> constructArgs) {
+    @SuppressWarnings("unchecked")
+    public <T> T create(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
         //1.解析接口
         Class<?> classToCreate = resolveInterface(type);
         //2.类实例化
-        return (T) instantiateClass(classToCreate, constructArgTypes, constructArgs);
+        return (T) instantiateClass(classToCreate, constructorArgTypes, constructorArgs);
     }
 
-    private <T> Object instantiateClass(Class<?> type, List<Class<T>> constructArgTypes, List<Object> constructArgs) {
+    private <T> T instantiateClass(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
         try {
-            Constructor<?> constructor;
-            if (constructArgTypes == null || constructArgs == null) {
+            Constructor<T> constructor;
+            //如果没有传入constructor，调用空构造函数，核心是调用Constructor.newInstance
+            if (constructorArgTypes == null || constructorArgs == null) {
                 constructor = type.getDeclaredConstructor();
                 if (!constructor.isAccessible()) {
                     constructor.setAccessible(true);
                 }
                 return constructor.newInstance();
             }
-            constructor = type.getDeclaredConstructor(constructArgTypes.toArray(new Class[constructArgTypes.size()]));
+            // 如果传入constructor，调用传入的构造函数，核心是调用Constructor.newInstance
+            constructor = type.getDeclaredConstructor(constructorArgTypes.toArray(new Class[constructorArgTypes.size()]));
             if (!constructor.isAccessible()) {
                 constructor.setAccessible(true);
             }
-            return constructor.newInstance(constructArgs.toArray(new Object[constructArgs.size()]));
+            return constructor.newInstance(constructorArgs.toArray(new Object[constructorArgs.size()]));
         } catch (Exception e) {
             // 如果出错，包装一下，重新抛出自己的异常
             StringBuilder argTypes = new StringBuilder();
-            if (constructArgTypes != null) {
-                for (Class<?> argType : constructArgTypes) {
-                    argTypes.append(argType.getSimpleName()).append(",");
+            if (constructorArgTypes != null) {
+                for (Class<?> argType : constructorArgTypes) {
+                    argTypes.append(argType.getSimpleName());
+                    argTypes.append(",");
                 }
             }
             StringBuilder argValues = new StringBuilder();
-            if (constructArgs != null) {
-                for (Object argValue : constructArgs) {
-                    argValues.append(argValue.getClass().getSimpleName()).append(",");
+            if (constructorArgs != null) {
+                for (Object argValue : constructorArgs) {
+                    argValues.append(argValue);
+                    argValues.append(",");
                 }
             }
-            throw new RuntimeException("Could not instantiate class " + type.getName() + " with invalid types (" + argTypes + ") or values ( " + argValues + "). Cause:" + e, e);
+            throw new RuntimeException("Error instantiating " + type + " with invalid types (" + argTypes + ") or values (" + argValues + "). Cause: " + e, e);
         }
     }
 
@@ -75,7 +80,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
     private Class<?> resolveInterface(Class<?> type) {
         Class<?> classToCreate;
         if (type == List.class || type == Collection.class || type == Iterable.class) {
-            classToCreate = Arrays.class;
+            classToCreate = ArrayList.class;
         } else if (type == Map.class) {
             classToCreate = HashMap.class;
         } else if (type == SortedMap.class) {

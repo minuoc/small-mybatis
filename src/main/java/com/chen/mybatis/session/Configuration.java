@@ -157,8 +157,8 @@ public class Configuration {
      * @param boundSql
      * @return
      */
-    public StatementHandler newStatementHandler(Executor executor, MappedStatement ms, Object parameter, ResultHandler resultHandler, BoundSql boundSql) {
-        return new PrepareStatementHandler(executor, ms, parameter, resultHandler, boundSql);
+    public StatementHandler newStatementHandler(Executor executor, MappedStatement ms, Object parameter,RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+        return new PrepareStatementHandler(executor, ms, parameter,rowBounds,resultHandler, boundSql);
     }
 
 
