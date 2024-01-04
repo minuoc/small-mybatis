@@ -7,6 +7,7 @@ import com.chen.mybatis.session.RowBounds;
 import com.chen.mybatis.transaction.Transaction;
 
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 
 /**
@@ -19,7 +20,9 @@ public interface Executor {
 
     ResultHandler NO_RESULT_HANDLER = null;
 
-    <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql);
+    int update(MappedStatement ms, Object parameter) throws SQLException;
+
+    <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException;
 
     Transaction getTransaction();
 
@@ -28,5 +31,7 @@ public interface Executor {
     void rollback(boolean required) throws SQLException;
 
     void close(boolean forceRollback);
+
+
 
 }

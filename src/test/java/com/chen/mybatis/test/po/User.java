@@ -1,6 +1,7 @@
 package com.chen.mybatis.test.po;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
@@ -11,6 +12,7 @@ import java.util.Date;
  * @create 2023/9/26
  */
 @Data
+@NoArgsConstructor
 public class User {
 
     private Long id;
@@ -24,5 +26,21 @@ public class User {
     private Date createTime;
     // 更新时间
     private Date updateTime;
+
+
+    public User(Long id) {
+        this.id = id;
+    }
+
+    public User(Long id, String userId) {
+        this.id = id;
+        this.userId = userId;
+    }
+
+    public User(Long id, String userId, String userName) {
+        this.id = id;
+        this.userId = userId;
+        this.userName = userName;
+    }
 
 }

@@ -30,7 +30,10 @@ public class MappedStatement {
     public MappedStatement() {
     }
 
-
+    public BoundSql getBoundSql(Object parameterObject) {
+        // 调用SqlSource #getBoundSql
+        return sqlSource.getBoundSql(parameterObject);
+    }
 
 
     public static class Builder {

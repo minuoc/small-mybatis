@@ -26,13 +26,31 @@ public class SimpleExecutor extends BaseExecutor {
     }
 
     @Override
+    protected int doUpdate(MappedStatement ms, Object parameter) throws SQLException {
+        Statement stmt = null;
+        try {
+            Configuration configuration = ms.getConfiguration();
+            // 新建一个StatementHandler
+            StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
+            // 准备语句
+            stmt = prepareStatement(handler);
+
+            return  handler.update(stmt);
+        } finally {
+            closeStatement(stmt);
+        }
+
+    }
+
+
+    @Override
     protected <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds,ResultHandler resultHandler, BoundSql boundSql) {
+        Statement stmt;
         try {
             Configuration configuration = ms.getConfiguration();
             StatementHandler handler = configuration.newStatementHandler(this, ms, parameter,rowBounds, resultHandler, boundSql);
-            Connection connection = transaction.getConnection();
-            Statement stmt = handler.prepare(connection);
-            handler.parameterize(stmt);
+            stmt = prepareStatement(handler);
+            // 返回结果
             return handler.query(stmt, resultHandler);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -40,4 +58,17 @@ public class SimpleExecutor extends BaseExecutor {
         }
 
     }
+
+
+    private Statement prepareStatement(StatementHandler handler) throws SQLException {
+        Statement stmt;
+        Connection connection = transaction.getConnection();
+        // 准备语句
+        stmt = handler.prepare(connection);
+        handler.parameterize(stmt);
+        return stmt;
+    }
+
+
+
 }

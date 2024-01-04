@@ -1,19 +1,19 @@
 package com.chen.mybatis.session.defaults;
 
 import com.chen.mybatis.executor.Executor;
-import com.chen.mybatis.mapping.BoundSql;
-import com.chen.mybatis.mapping.Environment;
 import com.chen.mybatis.mapping.MappedStatement;
 import com.chen.mybatis.session.Configuration;
 import com.chen.mybatis.session.RowBounds;
 import com.chen.mybatis.session.SqlSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Method;
-import java.sql.*;
-import java.util.ArrayList;
+import java.sql.SQLException;
 import java.util.List;
 
 public class DefaultSqlSession implements SqlSession {
+
+    private Logger logger = LoggerFactory.getLogger(DefaultSqlSession.class);
 
     private Configuration configuration;
     private Executor executor;
@@ -25,16 +25,62 @@ public class DefaultSqlSession implements SqlSession {
 
     @Override
     public <T> T selectOne(String statement) {
-        return this.selectOne(statement,null);
+        return this.selectOne(statement, null);
     }
 
     @Override
     public <T> T selectOne(String statement, Object parameter) {
-       MappedStatement ms = configuration.getMappedStatement(statement);
-       List<T> list = executor.query(ms,parameter, RowBounds.DEFAULT,Executor.NO_RESULT_HANDLER,ms.getSqlSource().getBoundSql(parameter));
-       return list.get(0);
+        MappedStatement ms = configuration.getMappedStatement(statement);
+        List<T> list = this.selectList(statement, parameter);
+        if (list.size() == 1) {
+            return list.get(0);
+        } else if (list.size() > 1) {
+            throw new RuntimeException("Expected one result (or null) to be returned by selectOne, but found:" + list.size());
+        } else {
+            return null;
+        }
     }
 
+    @Override
+    public <E> List<E> selectList(String statement, Object parameter) {
+        logger.info("");
+        MappedStatement ms = configuration.getMappedStatement(statement);
+        try {
+            return executor.query(ms, parameter, RowBounds.DEFAULT, Executor.NO_RESULT_HANDLER, ms.getSqlSource().getBoundSql(parameter));
+        } catch (SQLException e) {
+            throw new RuntimeException("Error querying database. Cause: " + e);
+        }
+    }
+
+    @Override
+    public int insert(String statement, Object parameter) {
+        // 在Mybatis 中 insert 调用的是 update
+        return update(statement, parameter);
+    }
+
+    @Override
+    public int update(String statement, Object parameter) {
+        MappedStatement ms = configuration.getMappedStatement(statement);
+        try {
+            return executor.update(ms, parameter);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error updating database. Cause:" + e);
+        }
+    }
+
+    @Override
+    public Object delete(String statement, Object parameter) {
+        return update(statement, parameter);
+    }
+
+    @Override
+    public void commit() {
+        try {
+            executor.commit(true);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error commit transaction. Cause:" + e);
+        }
+    }
 
 
     @Override
