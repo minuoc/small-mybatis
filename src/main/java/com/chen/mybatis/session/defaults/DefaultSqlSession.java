@@ -1,5 +1,6 @@
 package com.chen.mybatis.session.defaults;
 
+import com.alibaba.fastjson.JSON;
 import com.chen.mybatis.executor.Executor;
 import com.chen.mybatis.mapping.MappedStatement;
 import com.chen.mybatis.session.Configuration;
@@ -30,8 +31,7 @@ public class DefaultSqlSession implements SqlSession {
 
     @Override
     public <T> T selectOne(String statement, Object parameter) {
-        MappedStatement ms = configuration.getMappedStatement(statement);
-        List<T> list = this.selectList(statement, parameter);
+        List<T> list = this.<T>selectList(statement, parameter);
         if (list.size() == 1) {
             return list.get(0);
         } else if (list.size() > 1) {
@@ -43,7 +43,7 @@ public class DefaultSqlSession implements SqlSession {
 
     @Override
     public <E> List<E> selectList(String statement, Object parameter) {
-        logger.info("");
+        logger.info("执行查询 statement：{} parameter：{}", statement, JSON.toJSONString(parameter));
         MappedStatement ms = configuration.getMappedStatement(statement);
         try {
             return executor.query(ms, parameter, RowBounds.DEFAULT, Executor.NO_RESULT_HANDLER, ms.getSqlSource().getBoundSql(parameter));

@@ -105,7 +105,10 @@ public class MapperBuilderAssistant extends BaseBuilder {
         List<ResultMap> resultMaps = new ArrayList<>();
 
         if (resultMap != null) {
-            //TODO 暂无Map结果映射配置, 本章节 不添加此逻辑
+            String[] resultMapNames = resultMap.split(",");
+            for (String resultMapName : resultMapNames) {
+                resultMaps.add(configuration.getResultMap(resultMapName.trim()));
+            }
         } else if (resultType != null) {
             ResultMap.Builder inlineResultMapBuilder = new ResultMap.Builder(configuration, statementBuilder.id() + "-Inline",
                     resultType, new ArrayList<>());
