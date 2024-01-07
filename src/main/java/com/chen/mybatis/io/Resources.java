@@ -21,7 +21,7 @@ public class Resources {
                 return inputStream;
             }
         }
-        throw new IOException("Could not fin resource " + resource);
+        throw new IOException("Could not find resource " + resource);
     }
 
     private static ClassLoader[] getClassLoaders() {

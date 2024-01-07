@@ -16,7 +16,8 @@ import javax.sql.DataSource;
 import java.io.InputStream;
 import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * XML配置构建器，建造者模式
@@ -52,12 +53,19 @@ public class XMLConfigBuilder extends BaseBuilder {
         return configuration;
     }
 
+    /*
+        <mappers>
+             <mapper resource="mapper/User_Mapper.xml"/>
+             <mapper class="cn.bugstack.mybatis.test.dao.IUserDao"/>
+         </mappers>
+        */
     private void environmentsElement(Element context) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         String environment = context.attributeValue("default");
         List<Element> environmentList = context.elements("environment");
         for (Element e : environmentList) {
             String id = e.attributeValue("id");
-            if (environment.equals(id)){
+            if (environment.equals(id)) {
+
                 // 事务管理器
                 TransactionFactory txFactory = (TransactionFactory) typeAliasRegistry.resolveAlias(e.element("transactionManager").attributeValue("type")).newInstance();
 
@@ -89,17 +97,26 @@ public class XMLConfigBuilder extends BaseBuilder {
      *	 <mapper resource="org/mybatis/builder/AuthorMapper.xml"/>
      *	 <mapper resource="org/mybatis/builder/BlogMapper.xml"/>
      *	 <mapper resource="org/mybatis/builder/PostMapper.xml"/>
+     *
+     *   <mapper class="cn.bugstack.mybatis.test.dao.IUserDao"/>
      * </mappers>
      */
     private void mapperElement(Element mappers) throws Exception {
         List<Element> mapperList = mappers.elements("mapper");
-        for (Element e : mapperList){
+        for (Element e : mapperList) {
             String resource = e.attributeValue("resource");
-            InputStream inputStream = Resources.getResourceAsStream(resource);
-            // 在for 循环里每个mapper 都重新new一个XMLMapperBuilder,来解析
-            XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource);
-            mapperParser.parse();
-
+            String mapperClass =  e.attributeValue("class");
+            // XML 解析
+            if (resource != null && mapperClass == null) {
+                InputStream inputStream = Resources.getResourceAsStream(resource);
+                // 在for 循环里每个mapper 都重新new一个XMLMapperBuilder,来解析
+                XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource);
+                mapperParser.parse();
+            } else if (resource == null && mapperClass != null) {
+                //Annotation 注解解析
+                Class<?> mapperInterface = Resources.classForName(mapperClass);
+                configuration.addMapper(mapperInterface);
+            }
         }
     }
 }

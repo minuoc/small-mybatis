@@ -1,6 +1,8 @@
 package com.chen.mybatis.binding;
 
 import cn.hutool.core.lang.ClassScanner;
+import com.chen.mybatis.builder.annotation.MapperAnnotationBuilder;
+import com.chen.mybatis.session.Configuration;
 import com.chen.mybatis.session.SqlSession;
 
 import java.util.HashMap;
@@ -9,7 +11,14 @@ import java.util.Set;
 
 public class MapperRegistry {
 
+    private Configuration config;
+
     private final Map<Class<?>, MapperProxyFactory<?>> knownMappers = new HashMap<>();
+
+
+    public MapperRegistry(Configuration config) {
+        this.config = config;
+    }
 
     public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
         final MapperProxyFactory<T> mapperProxyFactory = (MapperProxyFactory<T>) knownMappers.get(type);
@@ -26,12 +35,19 @@ public class MapperRegistry {
 
 
     public <T> void addMapper(Class<T> type) {
+        /**
+         *  Mapper 必须是接口才会注册
+         **/
         if (type.isInterface()) {
             if (hasMapper(type)) {
                 throw new RuntimeException("Type " +type + " is already known to the MapperRegistry");
             }
             // 注册映射器代理工厂
             knownMappers.put(type,new MapperProxyFactory<>(type));
+
+            // 解析注解类语句配置
+            MapperAnnotationBuilder parser = new MapperAnnotationBuilder(config, type);
+            parser.parse();
         }
     }
 

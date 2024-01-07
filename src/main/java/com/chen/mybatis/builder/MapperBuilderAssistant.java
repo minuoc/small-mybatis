@@ -1,9 +1,6 @@
 package com.chen.mybatis.builder;
 
-import com.chen.mybatis.mapping.MappedStatement;
-import com.chen.mybatis.mapping.ResultMap;
-import com.chen.mybatis.mapping.SqlCommandType;
-import com.chen.mybatis.mapping.SqlSource;
+import com.chen.mybatis.mapping.*;
 import com.chen.mybatis.scripting.LanguageDriver;
 import com.chen.mybatis.session.Configuration;
 
@@ -37,6 +34,13 @@ public class MapperBuilderAssistant extends BaseBuilder{
         if (isReference) {
             if (base.contains(".")) {
                 return base;
+            }
+        } else {
+            if (base.startsWith(currentNamespace + ".")) {
+                return base;
+            }
+            if (base.contains(".")) {
+                throw new RuntimeException("Dots are not allowed in element names, please remove it from " + base);
             }
         }
         return  currentNamespace + "." + base;
@@ -88,4 +92,15 @@ public class MapperBuilderAssistant extends BaseBuilder{
     }
 
 
+    public ResultMap addResultMap(String id, Class<?> type, List<ResultMapping> resultMappings) {
+        ResultMap.Builder inlineResultMapBuilder = new ResultMap.Builder(configuration,
+                id,
+                type,
+                resultMappings);
+
+        ResultMap resultMap = inlineResultMapBuilder.build();
+        configuration.addResultMap(resultMap);
+        return resultMap;
+
+    }
 }
