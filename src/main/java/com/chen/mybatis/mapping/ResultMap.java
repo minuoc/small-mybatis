@@ -51,4 +51,9 @@ public class ResultMap {
     public Set<String> getMappedColumns() {
         return mappedColumns;
     }
+
+
+    public List<ResultMapping> getPropertyResultMappings(){
+        return resultMappings;
+    }
 }

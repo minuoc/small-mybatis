@@ -1,13 +1,15 @@
 package com.chen.mybatis.builder;
 
 import com.chen.mybatis.mapping.*;
+import com.chen.mybatis.reflection.MetaClass;
 import com.chen.mybatis.scripting.LanguageDriver;
 import com.chen.mybatis.session.Configuration;
+import com.chen.mybatis.type.TypeHandler;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MapperBuilderAssistant extends BaseBuilder{
+public class MapperBuilderAssistant extends BaseBuilder {
 
 
     private String currentNamespace;
@@ -19,12 +21,38 @@ public class MapperBuilderAssistant extends BaseBuilder{
         this.resource = resource;
     }
 
+
     public String getCurrentNamespace() {
         return currentNamespace;
     }
 
     public void setCurrentNamespace(String currentNamespace) {
         this.currentNamespace = currentNamespace;
+    }
+
+
+    public ResultMapping buildResultMapping(Class<?> resultType, String property, String column, List<ResultFlag> flags) {
+        Class<?> javaTypeClass = resolveResultJavaType(resultType, property, null);
+        TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, null);
+        ResultMapping.Builder builder = new ResultMapping.Builder(configuration, property, column, javaTypeClass);
+        builder.typeHandler(typeHandlerInstance);
+        builder.flags(flags);
+        return builder.build();
+    }
+
+    private Class<?> resolveResultJavaType(Class<?> resultType, String property, Class<?> javaType) {
+        if (javaType == null && property != null) {
+            try {
+                MetaClass metaResultType = MetaClass.forClass(resultType);
+                javaType = metaResultType.getSetterType(property);
+            } catch (Exception ignore) {
+
+            }
+        }
+        if (javaType == null) {
+            javaType = Object.class;
+        }
+        return javaType;
     }
 
     private String applyCurrentNamespace(String base, boolean isReference) {
@@ -43,7 +71,7 @@ public class MapperBuilderAssistant extends BaseBuilder{
                 throw new RuntimeException("Dots are not allowed in element names, please remove it from " + base);
             }
         }
-        return  currentNamespace + "." + base;
+        return currentNamespace + "." + base;
     }
 
     public MappedStatement addMappedStatement(String id,
@@ -55,11 +83,11 @@ public class MapperBuilderAssistant extends BaseBuilder{
                                               LanguageDriver lang) {
 
         // 给id 加上namespace前缀，
-        id = applyCurrentNamespace(id,false);
-        MappedStatement.Builder statementBuilder = new MappedStatement.Builder(configuration,id,sqlCommandType,sqlSource,resultType);
+        id = applyCurrentNamespace(id, false);
+        MappedStatement.Builder statementBuilder = new MappedStatement.Builder(configuration, id, sqlCommandType, sqlSource, resultType);
 
         // 结果 映射，给MappedStatement#resultMaps
-        setStatementResult(resultMap,resultType,statementBuilder);
+        setStatementResult(resultMap, resultType, statementBuilder);
 
 
         MappedStatement statement = statementBuilder.build();
@@ -72,17 +100,15 @@ public class MapperBuilderAssistant extends BaseBuilder{
 
     private void setStatementResult(String resultMap, Class<?> resultType, MappedStatement.Builder statementBuilder) {
         // 因为暂时还没有在Mapper XML 中配置 Map 返回结果， 所以这里返回的是 null
-        resultMap = applyCurrentNamespace(resultMap,true);
+        resultMap = applyCurrentNamespace(resultMap, true);
 
         List<ResultMap> resultMaps = new ArrayList<>();
 
-        if (resultMap != null){
+        if (resultMap != null) {
             //TODO 暂无Map结果映射配置, 本章节 不添加此逻辑
-        }
-
-        else if (resultType != null) {
-            ResultMap.Builder inlineResultMapBuilder = new ResultMap.Builder(configuration,statementBuilder.id() + "-Inline",
-                    resultType,new ArrayList<>());
+        } else if (resultType != null) {
+            ResultMap.Builder inlineResultMapBuilder = new ResultMap.Builder(configuration, statementBuilder.id() + "-Inline",
+                    resultType, new ArrayList<>());
 
             resultMaps.add(inlineResultMapBuilder.build());
         }
@@ -93,6 +119,9 @@ public class MapperBuilderAssistant extends BaseBuilder{
 
 
     public ResultMap addResultMap(String id, Class<?> type, List<ResultMapping> resultMappings) {
+        // fix 补全ID 全路径 如：com.chen.mybatis.test.dao.IActivityDao + activityMap
+        id = applyCurrentNamespace(id, false);
+
         ResultMap.Builder inlineResultMapBuilder = new ResultMap.Builder(configuration,
                 id,
                 type,
@@ -103,4 +132,6 @@ public class MapperBuilderAssistant extends BaseBuilder{
         return resultMap;
 
     }
+
+
 }
