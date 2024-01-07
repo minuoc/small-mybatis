@@ -94,7 +94,7 @@ public class MapperMethod {
         }
 
         public Object convertArgsToSqlCommandParam(Object[] args) {
-            final int paramCount = args.length;
+            final int paramCount = params.size();
             if (args == null || paramCount == 0) {
                 return null;
             } else if (paramCount == 1) {
