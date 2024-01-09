@@ -28,4 +28,13 @@ public interface TypeHandler<T> {
      * @return
      */
     T getResult(ResultSet resultSet, String columnName) throws SQLException;
+
+    /**
+     * 取得结果
+     * @param resultSet
+     * @param columnIndex
+     * @return
+     * @throws SQLException
+     */
+    T getResult(ResultSet resultSet, int columnIndex) throws SQLException;
 }

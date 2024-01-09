@@ -7,6 +7,9 @@ import com.chen.mybatis.annotation.Select;
 import com.chen.mybatis.annotation.Update;
 import com.chen.mybatis.binding.MapperMethod;
 import com.chen.mybatis.builder.MapperBuilderAssistant;
+import com.chen.mybatis.executor.keygen.Jdbc3KeyGenerator;
+import com.chen.mybatis.executor.keygen.KeyGenerator;
+import com.chen.mybatis.executor.keygen.NoKeyGenerator;
 import com.chen.mybatis.mapping.SqlCommandType;
 import com.chen.mybatis.mapping.SqlSource;
 import com.chen.mybatis.scripting.LanguageDriver;
@@ -63,9 +66,24 @@ public class MapperAnnotationBuilder {
         LanguageDriver languageDriver = getLanguageDriver(method);
         SqlSource sqlSource = getSqlSourceFromAnnotations(method, parameterTypeClass, languageDriver);
 
+
+
+
+
         if (sqlSource != null) {
             final String mappedStatementId = type.getName() + "." + method.getName();
             SqlCommandType sqlCommandType = getSqlCommand(method);
+
+            //step 15 新增
+            KeyGenerator keyGenerator;
+            String keyProperty = "id";
+            if (SqlCommandType.INSERT.equals(sqlCommandType) || SqlCommandType.UPDATE.equals(sqlCommandType)) {
+                keyGenerator = configuration.isUseGeneratedKeys() ? new Jdbc3KeyGenerator() : new NoKeyGenerator();
+            } else {
+                keyGenerator = new NoKeyGenerator();
+            }
+
+
             boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
             String resultMapId = null;
             if (isSelect) {
@@ -79,6 +97,8 @@ public class MapperAnnotationBuilder {
                     parameterTypeClass,
                     resultMapId,
                     getReturnType(method),
+                    keyGenerator,
+                    keyProperty,
                     languageDriver);
 
 

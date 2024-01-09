@@ -1,5 +1,6 @@
 package com.chen.mybatis.builder;
 
+import com.chen.mybatis.executor.keygen.KeyGenerator;
 import com.chen.mybatis.mapping.*;
 import com.chen.mybatis.reflection.MetaClass;
 import com.chen.mybatis.scripting.LanguageDriver;
@@ -74,17 +75,36 @@ public class MapperBuilderAssistant extends BaseBuilder {
         return currentNamespace + "." + base;
     }
 
+    /**
+     * 添加映射语句
+     * @param id
+     * @param sqlSource
+     * @param sqlCommandType
+     * @param parameterType
+     * @param resultMap
+     * @param resultType
+     * @param keyGenerator
+     * @param keyProperty
+     * @param lang
+     * @return
+     */
     public MappedStatement addMappedStatement(String id,
                                               SqlSource sqlSource,
                                               SqlCommandType sqlCommandType,
                                               Class<?> parameterType,
                                               String resultMap,
                                               Class<?> resultType,
+                                              KeyGenerator keyGenerator,
+                                              String keyProperty,
                                               LanguageDriver lang) {
 
         // 给id 加上namespace前缀，
         id = applyCurrentNamespace(id, false);
         MappedStatement.Builder statementBuilder = new MappedStatement.Builder(configuration, id, sqlCommandType, sqlSource, resultType);
+
+        statementBuilder.resource(resource);
+        statementBuilder.keyGenerator(keyGenerator);
+        statementBuilder.keyProperty(keyProperty);
 
         // 结果 映射，给MappedStatement#resultMaps
         setStatementResult(resultMap, resultType, statementBuilder);

@@ -54,7 +54,7 @@ public abstract class BaseExecutor implements Executor {
     }
 
 
-    protected abstract <E> List<E> doQuery(MappedStatement ms,Object parameter,RowBounds rowBounds,ResultHandler resultHandler,BoundSql boundSql);
+    protected abstract <E> List<E> doQuery(MappedStatement ms,Object parameter,RowBounds rowBounds,ResultHandler resultHandler,BoundSql boundSql) throws SQLException;
 
 
     protected abstract int doUpdate(MappedStatement ms, Object parameter) throws SQLException;

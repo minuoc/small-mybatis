@@ -2,6 +2,7 @@ package com.chen.mybatis.builder.xml;
 
 import com.chen.mybatis.builder.BaseBuilder;
 import com.chen.mybatis.builder.MapperBuilderAssistant;
+import com.chen.mybatis.executor.keygen.Jdbc3KeyGenerator;
 import com.chen.mybatis.executor.keygen.KeyGenerator;
 import com.chen.mybatis.executor.keygen.NoKeyGenerator;
 import com.chen.mybatis.executor.keygen.SelectKeyGenerator;
@@ -62,7 +63,7 @@ public class XMLStatementBuilder extends BaseBuilder {
 
         Class<?> resultTypeClass = resolveAlias(resultType);
 
-        // 获取命令类型
+        // 获取命令类型 (select|insert|update|delete)
         String nodeName = element.getName();
         SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
 
@@ -70,10 +71,27 @@ public class XMLStatementBuilder extends BaseBuilder {
         Class<?> langClass = configuration.getLanguageRegistry().getDefaultDriverClass();
         LanguageDriver langDriver = configuration.getLanguageRegistry().getDriver(langClass);
 
+        //step15 解析<selectKey>
+        processSelectKeyNodes(id, parameterTypeClass, langDriver);
+
+        //解析成SqlSource,DynamicSqlSource/RawSqlSource
         SqlSource sqlSource = langDriver.createSqlSource(configuration,element,parameterTypeClass);
 
+        // 属性标记【仅对 insert 有用】, Mybatis 会通过 getGenerateKeys 或者通过 insert 语句的 selectKey 子元素设置它的值
+        String keyProperty = element.attributeValue("keyProperty");
+        KeyGenerator keyGenerator = null;
+        String keyStatementId = id + SelectKeyGenerator.SELECT_KEY_SUFFIX;
+        keyStatementId = builderAssistant.applyCurrentNamespace(keyStatementId,true);
+        if (configuration.hasKeyGenerator(keyStatementId)) {
+            keyGenerator = configuration.getKeyGenerator(keyStatementId);
+        } else {
+            keyGenerator = configuration.isUseGeneratedKeys() && SqlCommandType.INSERT.equals(sqlCommandType)
+                    ? new Jdbc3KeyGenerator() : new NoKeyGenerator();
+        }
+
         // 调用助手类
-        builderAssistant.addMappedStatement(id,sqlSource,sqlCommandType,parameterTypeClass,resultMap,resultTypeClass,langDriver);
+        builderAssistant.addMappedStatement(id,sqlSource,sqlCommandType,parameterTypeClass,
+                resultMap,resultTypeClass,keyGenerator,keyProperty,langDriver);
 
     }
 
@@ -122,6 +140,8 @@ public class XMLStatementBuilder extends BaseBuilder {
                 parameterTypeClass,
                 resultMap,
                 resultTypeClass,
+                keyGenerator,
+                keyProperty,
                 languageDriver);
 
         id = builderAssistant.applyCurrentNamespace(id,false);

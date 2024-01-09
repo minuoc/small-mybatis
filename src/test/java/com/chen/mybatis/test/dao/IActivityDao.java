@@ -7,4 +7,5 @@ public interface IActivityDao {
     Activity queryActivityById(Long id);
 
 
+    Integer insert(Activity activity);
 }

@@ -35,12 +35,12 @@ public class ResultSetWrapper {
 
     public ResultSetWrapper(ResultSet resultSet, Configuration configuration) throws SQLException {
         super();
-        this.resultSet = resultSet;
         this.typeHandlerRegistry = configuration.getTypeHandlerRegistry();
+        this.resultSet = resultSet;
         final ResultSetMetaData metaData = resultSet.getMetaData();
         final int columnCount = metaData.getColumnCount();
 
-        for (int i = 1; i < columnCount; i++) {
+        for (int i = 1; i <= columnCount; i++) {
             columnNames.add(metaData.getColumnLabel(i));
             jdbcTypes.add(JdbcType.forCode(metaData.getColumnType(i)));
             classNames.add(metaData.getColumnClassName(i));
@@ -54,7 +54,7 @@ public class ResultSetWrapper {
     }
 
     public List<String> getColumnNames() {
-        return columnNames;
+        return this.columnNames;
     }
 
 

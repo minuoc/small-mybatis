@@ -35,7 +35,7 @@ public class SimpleExecutor extends BaseExecutor {
             // 准备语句
             stmt = prepareStatement(handler);
 
-            return  handler.update(stmt);
+            return handler.update(stmt);
         } finally {
             closeStatement(stmt);
         }
@@ -44,17 +44,18 @@ public class SimpleExecutor extends BaseExecutor {
 
 
     @Override
-    protected <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds,ResultHandler resultHandler, BoundSql boundSql) {
-        Statement stmt;
+    protected <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
+        Statement stmt = null;
         try {
             Configuration configuration = ms.getConfiguration();
-            StatementHandler handler = configuration.newStatementHandler(this, ms, parameter,rowBounds, resultHandler, boundSql);
+            // 新建一个 StatementHandler
+            StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
+            // 准备语句
             stmt = prepareStatement(handler);
             // 返回结果
             return handler.query(stmt, resultHandler);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
+        } finally {
+            closeStatement(stmt);
         }
 
     }
@@ -68,7 +69,6 @@ public class SimpleExecutor extends BaseExecutor {
         handler.parameterize(stmt);
         return stmt;
     }
-
 
 
 }

@@ -30,11 +30,18 @@ public abstract class BaseTypeHandler<T> implements TypeHandler<T> {
         return getNullableResult(rs,columnName);
     }
 
+    public T getResult(ResultSet rs, int columnIndex) throws SQLException {
+        return getNullableResult(rs,columnIndex);
+    }
+
 
 
     protected abstract void setNonNullParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException;
 
 
     protected abstract T getNullableResult(ResultSet rs, String columnName) throws SQLException;
+
+
+    protected abstract T getNullableResult(ResultSet rs, int columnIndex) throws SQLException;
 
 }

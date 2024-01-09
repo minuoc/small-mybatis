@@ -71,6 +71,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
             ResultMap resultMap = resultMaps.get(resultSetCount);
             handleResultSet(rsw, resultMap, multipleResults, null);
             rsw = getNextResultSet(stmt);
+            resultSetCount++;
         }
 
         return multipleResults.size() == 1 ? (List<Object>) multipleResults.get(0) : multipleResults;
@@ -141,23 +142,47 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     }
 
 
-    private Object createResultObject(ResultSetWrapper rsw, ResultMap resultMap, String columnPrefix) {
+    private Object createResultObject(ResultSetWrapper rsw, ResultMap resultMap, String columnPrefix) throws SQLException {
         final List<Class<?>> constructorArgTypes = new ArrayList<>();
         final List<Object> constructorArgs = new ArrayList<>();
         return createResultObject(rsw, resultMap, constructorArgTypes, constructorArgs, columnPrefix);
     }
 
 
-    private Object createResultObject(ResultSetWrapper rws, ResultMap resultMap, List<Class<?>> constructorArgTypes, List<Object> constructorArgs, String columnPrefix) {
+    private Object createResultObject(ResultSetWrapper rsw, ResultMap resultMap, List<Class<?>> constructorArgTypes, List<Object> constructorArgs, String columnPrefix) throws SQLException {
         final Class<?> resultType = resultMap.getType();
         final MetaClass metaType = MetaClass.forClass(resultType);
-        if (resultType.isInterface() || metaType.hasDefaultConstructor()) {
-            // 普通的Bean 对象类型
+        if (typeHandlerRegistry.hasTypeHandler(resultType)) {
+            // 基本类型
+            return createPrimitiveResultObject(rsw, resultMap, columnPrefix);
+        } else if (resultType.isInterface() || metaType.hasDefaultConstructor()) {
+            // 普通的Bean对象类型
             return objectFactory.create(resultType);
         }
         throw new RuntimeException("Do not know how to create an instance of " + resultType);
     }
 
+    // 简单类型创建
+    private Object createPrimitiveResultObject(ResultSetWrapper rsw, ResultMap resultMap, String columnPrefix) throws SQLException {
+        final Class<?> resultType = resultMap.getType();
+        final String columnName;
+        if (!resultMap.getResultMappings().isEmpty()) {
+            final List<ResultMapping> resultMappingList = resultMap.getResultMappings();
+            final ResultMapping mapping = resultMappingList.get(0);
+            columnName = prependPrefix(mapping.getColumn(), columnPrefix);
+        } else {
+            columnName = rsw.getColumnNames().get(0);
+        }
+        final TypeHandler<?> typeHandler = rsw.getTypeHandler(resultType, columnName);
+        return typeHandler.getResult(rsw.getResultSet(), columnName);
+    }
+
+    private String prependPrefix(String columnName, String prefix) {
+        if (columnName == null || columnName.length() == 0 || prefix == null || prefix.length() == 0) {
+            return columnName;
+        }
+        return prefix + columnName;
+    }
 
     private boolean applyAutomaticMappings(ResultSetWrapper rsw, ResultMap resultMap, MetaObject metaObject, String columnPrefix) throws SQLException {
 
@@ -194,8 +219,8 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     }
 
 
-    private boolean applyPropertyMappings(ResultSetWrapper resultSetWrapper, ResultMap resultMap, MetaObject metaObject, String columnPrefix) throws SQLException {
-        final List<String> mappedColumnNames = resultSetWrapper.getMappedColumnNames(resultMap, columnPrefix);
+    private boolean applyPropertyMappings(ResultSetWrapper rsw, ResultMap resultMap, MetaObject metaObject, String columnPrefix) throws SQLException {
+        final List<String> mappedColumnNames = rsw.getMappedColumnNames(resultMap, columnPrefix);
         boolean foundValues = false;
         final List<ResultMapping> propertyMappings = resultMap.getPropertyResultMappings();
         for (ResultMapping propertyMapping : propertyMappings) {
@@ -203,18 +228,17 @@ public class DefaultResultSetHandler implements ResultSetHandler {
             if (column != null && mappedColumnNames.contains(column.toUpperCase(Locale.ENGLISH))) {
                 // 获取值
                 final TypeHandler<?> typeHandler = propertyMapping.getTypeHandler();
-                Object value = typeHandler.getResult(resultSetWrapper.getResultSet(),column);
+                Object value = typeHandler.getResult(rsw.getResultSet(), column);
                 // 设置值
                 final String property = propertyMapping.getProperty();
                 if (value != NO_VALUE && property != null && value != null) {
                     // 通过反射工具类设置属性值
-                    metaObject.setValue(property,value);
+                    metaObject.setValue(property, value);
                     foundValues = true;
                 }
-
             }
         }
-        return  foundValues;
+        return foundValues;
     }
 
 
