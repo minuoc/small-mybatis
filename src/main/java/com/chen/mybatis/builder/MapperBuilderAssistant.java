@@ -55,7 +55,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
         return javaType;
     }
 
-    private String applyCurrentNamespace(String base, boolean isReference) {
+    public String applyCurrentNamespace(String base, boolean isReference) {
         if (base == null) {
             return null;
         }

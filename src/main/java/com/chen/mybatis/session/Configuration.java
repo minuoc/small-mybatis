@@ -6,10 +6,12 @@ import com.chen.mybatis.datasource.pooled.PooledDataSourceFactory;
 import com.chen.mybatis.datasource.unpooled.UnpooledDataSourceFactory;
 import com.chen.mybatis.executor.Executor;
 import com.chen.mybatis.executor.SimpleExecutor;
+import com.chen.mybatis.executor.keygen.KeyGenerator;
+import com.chen.mybatis.executor.keygen.SelectKeyGenerator;
 import com.chen.mybatis.executor.parameter.ParameterHandler;
 import com.chen.mybatis.executor.resultset.DefaultResultSetHandler;
 import com.chen.mybatis.executor.resultset.ResultSetHandler;
-import com.chen.mybatis.executor.statement.PrepareStatementHandler;
+import com.chen.mybatis.executor.statement.PreparedStatementHandler;
 import com.chen.mybatis.executor.statement.StatementHandler;
 import com.chen.mybatis.mapping.BoundSql;
 import com.chen.mybatis.mapping.Environment;
@@ -40,6 +42,7 @@ public class Configuration {
      */
     protected Environment environment;
 
+    protected boolean useGeneratedKeys = false;
     /**
      * 映射注册机
      */
@@ -55,6 +58,8 @@ public class Configuration {
      * 结果映射
      */
     protected final Map<String,ResultMap> resultMaps = new HashMap<>();
+
+    protected final Map<String, KeyGenerator> keyGenerators = new HashMap<>();
 
     /**
      * 类型别名注册机
@@ -164,7 +169,7 @@ public class Configuration {
      * @return
      */
     public StatementHandler newStatementHandler(Executor executor, MappedStatement ms, Object parameter,RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
-        return new PrepareStatementHandler(executor, ms, parameter,rowBounds,resultHandler, boundSql);
+        return new PreparedStatementHandler(executor, ms, parameter,rowBounds,resultHandler, boundSql);
     }
 
 
@@ -220,5 +225,25 @@ public class Configuration {
 
     public void addResultMap(ResultMap resultMap) {
         resultMaps.put(resultMap.getId(),resultMap);
+    }
+
+    public void addKeyGenerator(String id, SelectKeyGenerator selectKeyGenerator) {
+        keyGenerators.put(id,selectKeyGenerator);
+    }
+
+    public KeyGenerator getKeyGenerator(String id) {
+        return keyGenerators.get(id);
+    }
+
+    public boolean hasKeyGenerator(String id) {
+        return keyGenerators.containsKey(id);
+    }
+
+    public boolean isUseGeneratedKeys() {
+        return useGeneratedKeys;
+    }
+
+    public void setUseGeneratedKeys(boolean useGeneratedKeys) {
+        this.useGeneratedKeys = useGeneratedKeys;
     }
 }

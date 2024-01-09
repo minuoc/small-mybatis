@@ -33,9 +33,17 @@ public abstract class BaseExecutor implements Executor {
         this.transaction = transaction;
     }
 
+    @Override
     public int update(MappedStatement ms, Object parameter) throws SQLException {
         return doUpdate(ms,parameter);
     }
+
+    @Override
+    public <E> List<E> query(MappedStatement ms, Object parameter,  RowBounds rowBounds,ResultHandler resultHandler) throws SQLException{
+        BoundSql boundSql = ms.getBoundSql(parameter);
+        return doQuery(ms,parameter,rowBounds,resultHandler,boundSql);
+    }
+
 
     @Override
     public <E> List<E> query(MappedStatement ms, Object parameter,  RowBounds rowBounds,ResultHandler resultHandler, BoundSql boundSql) throws SQLException{
@@ -44,6 +52,7 @@ public abstract class BaseExecutor implements Executor {
         }
         return doQuery(ms,parameter,rowBounds,resultHandler,boundSql);
     }
+
 
     protected abstract <E> List<E> doQuery(MappedStatement ms,Object parameter,RowBounds rowBounds,ResultHandler resultHandler,BoundSql boundSql);
 

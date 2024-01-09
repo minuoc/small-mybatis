@@ -2,6 +2,9 @@ package com.chen.mybatis.builder.xml;
 
 import com.chen.mybatis.builder.BaseBuilder;
 import com.chen.mybatis.builder.MapperBuilderAssistant;
+import com.chen.mybatis.executor.keygen.KeyGenerator;
+import com.chen.mybatis.executor.keygen.NoKeyGenerator;
+import com.chen.mybatis.executor.keygen.SelectKeyGenerator;
 import com.chen.mybatis.mapping.MappedStatement;
 import com.chen.mybatis.mapping.SqlCommandType;
 import com.chen.mybatis.mapping.SqlSource;
@@ -9,6 +12,7 @@ import com.chen.mybatis.scripting.LanguageDriver;
 import com.chen.mybatis.session.Configuration;
 import org.dom4j.Element;
 
+import java.util.List;
 import java.util.Locale;
 
 
@@ -73,4 +77,56 @@ public class XMLStatementBuilder extends BaseBuilder {
 
     }
 
+
+    private void processSelectKeyNodes(String id, Class<?> parameterTypeClass, LanguageDriver languageDriver){
+        List<Element> selectKeyNodes = element.elements("selectKey");
+        parseSelectKeyNodes(id,selectKeyNodes,parameterTypeClass,languageDriver);
+    }
+
+    private void parseSelectKeyNodes(String parentId, List<Element> selectKeyNodes, Class<?> parameterTypeClass, LanguageDriver languageDriver) {
+        for (Element nodeToHandle : selectKeyNodes) {
+            String id = parentId + SelectKeyGenerator.SELECT_KEY_SUFFIX;
+            parseSelectKeyNode(id,nodeToHandle,parameterTypeClass,languageDriver);
+        }
+
+    }
+
+    /**
+     * 解析selectKey节点
+     * <selectKey keyProperty="id" order="AFTER" resultType="long">
+     * SELECT LAST_INSERT_ID()
+     * </selectKey>
+     * @param id
+     * @param nodeToHandle
+     * @param parameterTypeClass
+     * @param languageDriver
+     */
+    private void parseSelectKeyNode(String id, Element nodeToHandle, Class<?> parameterTypeClass, LanguageDriver languageDriver) {
+        String resultType = nodeToHandle.attributeValue("resultType");
+        Class<?> resultTypeClass = resolveClass(resultType);
+        boolean executeBefore = "BEFORE".equals(nodeToHandle.attributeValue("order","AFTER"));
+        String keyProperty = nodeToHandle.attributeValue("keyProperty");
+
+        // default
+        String resultMap = null;
+        KeyGenerator keyGenerator = new NoKeyGenerator();
+
+        // 解析成SqlSource, DynamicSqlSource/RawSqlSource
+        SqlSource sqlSource = languageDriver.createSqlSource(configuration, nodeToHandle, parameterTypeClass);
+        SqlCommandType sqlCommandType = SqlCommandType.SELECT;
+
+        // 调用助手类
+        builderAssistant.addMappedStatement(id,
+                sqlSource,
+                sqlCommandType,
+                parameterTypeClass,
+                resultMap,
+                resultTypeClass,
+                languageDriver);
+
+        id = builderAssistant.applyCurrentNamespace(id,false);
+        MappedStatement keyStatement = configuration.getMappedStatement(id);
+        configuration.addKeyGenerator(id,new SelectKeyGenerator(keyStatement,executeBefore));
+
+    }
 }

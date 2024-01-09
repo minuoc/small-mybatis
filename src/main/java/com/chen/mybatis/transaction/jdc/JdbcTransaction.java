@@ -29,6 +29,10 @@ public class JdbcTransaction implements Transaction {
 
     @Override
     public Connection getConnection() throws SQLException {
+        // 多个SQL 在 同一个JDBC 连接下，才能完成事务特性
+        if (null != connection) {
+            return  connection;
+        }
         connection = dataSource.getConnection();
         connection.setTransactionIsolation(level.getLeval());
         connection.setAutoCommit(autoCommit);

@@ -1,5 +1,6 @@
 package com.chen.mybatis.mapping;
 
+import com.chen.mybatis.executor.keygen.KeyGenerator;
 import com.chen.mybatis.executor.parameter.ParameterHandler;
 import com.chen.mybatis.scripting.LanguageDriver;
 import com.chen.mybatis.session.Configuration;
@@ -11,6 +12,8 @@ import java.util.Map;
  * 映射语句类
  */
 public class MappedStatement {
+
+    private String resource;
 
     private Configuration configuration;
 
@@ -27,6 +30,15 @@ public class MappedStatement {
 
     private List<ResultMap> resultMaps;
 
+    /**
+     * step15 新增
+     */
+    private KeyGenerator keyGenerator;
+
+    private String[] keyProperties;
+
+    private String[] keyColumns;
+
     public MappedStatement() {
     }
 
@@ -34,6 +46,8 @@ public class MappedStatement {
         // 调用SqlSource #getBoundSql
         return sqlSource.getBoundSql(parameterObject);
     }
+
+
 
 
     public static class Builder {
@@ -94,5 +108,21 @@ public class MappedStatement {
 
     public List<ResultMap> getResultMaps(){
         return resultMaps;
+    }
+
+    public KeyGenerator getKeyGenerator() {
+        return keyGenerator;
+    }
+
+    public String[] getKeyColumns() {
+        return keyColumns;
+    }
+
+    public String[] getKeyProperties() {
+        return keyProperties;
+    }
+
+    public String getResource() {
+        return resource;
     }
 }

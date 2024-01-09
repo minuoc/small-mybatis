@@ -1,8 +1,7 @@
 package com.chen.mybatis.executor.statement;
 
 import com.chen.mybatis.executor.Executor;
-import com.chen.mybatis.executor.parameter.ParameterHandler;
-import com.chen.mybatis.executor.resultset.ResultSetHandler;
+import com.chen.mybatis.executor.keygen.KeyGenerator;
 import com.chen.mybatis.mapping.BoundSql;
 import com.chen.mybatis.mapping.MappedStatement;
 import com.chen.mybatis.session.ResultHandler;
@@ -20,9 +19,9 @@ import java.util.List;
  * @author : e-Lufeng.Chen
  * @create 2023/9/27
  */
-public class PrepareStatementHandler extends BaseStatementHandler {
+public class PreparedStatementHandler extends BaseStatementHandler {
 
-    public PrepareStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+    public PreparedStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
         super(executor, mappedStatement, parameterObject, rowBounds,resultHandler, boundSql);
     }
 
@@ -46,9 +45,16 @@ public class PrepareStatementHandler extends BaseStatementHandler {
 
     @Override
     public int update(Statement statement) throws SQLException {
+        // 执行 insert/delete/update 语句
         PreparedStatement ps = (PreparedStatement) statement;
         ps.execute();
-        return ps.getUpdateCount();
+        int rows = ps.getUpdateCount();
+
+        // 执行 selectKey 语句
+        Object parameterObject = boundSql.getParameterObject();
+        KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
+        keyGenerator.processAfter(executor,mappedStatement,ps,parameterObject);
+        return rows;
     }
 
 
